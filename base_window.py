@@ -29,7 +29,7 @@ class Gui:
         self.screen = base_window.screen
         self.screen_rect = base_window.screen.get_rect()
         
-    def _create_gui_rects(self):
+    def create_gui_rects(self):
         """Creates all basic gui rects."""
         # Create head rects.
         self.head_rect = pygame.Rect(0, 0, self.settings.screen_width - 36, 
@@ -73,15 +73,15 @@ class Gui:
         ]
         return all_basic_gui_rects
         
-    def _draw_rects(self, all_rects):
+    def draw_rects(self, all_rects):
         """Draw given rects with given color."""
         for one_rect in all_rects:
             self.screen.fill(one_rect[1], rect=one_rect[0])
             
-    def _draw_lines(self):
+    def draw_lines(self):
         """Draw border lines."""
         # Draw white lines.
-        white_color = (250, 250, 250)
+        white_color = self.settings.outline_white
         outer_white_lines = pygame.draw.lines(self.screen, color=white_color,
             closed=False, points=[self.screen_rect.bottomleft,
                 self.screen_rect.topleft, self.screen_rect.topright],
@@ -108,7 +108,7 @@ class Gui:
             width = 5)
         
         # Draw grey lines.
-        grey_color = (150, 150, 150)
+        grey_color = self.settings.outline_grey
         outer_grey_lines = pygame.draw.lines(self.screen, color=grey_color,
             closed=False, points=[self.screen_rect.bottomleft,
                 self.screen_rect.bottomright, self.screen_rect.topright],

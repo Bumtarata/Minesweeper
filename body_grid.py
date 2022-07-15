@@ -1,6 +1,9 @@
+from random import choice
+
 import pygame
 
 from base_window import Base_window, Gui
+from box import Box
 from settings import Settings
 
 class Grid():
@@ -11,18 +14,12 @@ class Grid():
         self.screen = Base_window().screen
         self.settings = Settings()
     
-    def _create_single_gaming_box(self):
-        """Creates a single gaming box."""
-        single_box_rect = pygame.Rect(0, 0, self.settings.box_width, 
-            self.settings.box_height)
-        return single_box_rect
-    
     def _create_row_of_boxes(self, box_top):
         """Create a single row of gaming boxes in body rect."""
         box_num = 0
         row_of_boxes = []
         for box in range(self.settings.columns):   # box is rect
-            box = self._create_single_gaming_box()
+            box = Box()
             box.left = self.body_rect.left + (box.width * box_num)
             box.top = box_top
             row_of_boxes.append(box)
@@ -30,7 +27,7 @@ class Grid():
         
         return row_of_boxes
     
-    def _create_field_of_boxes(self):
+    def create_field_of_boxes(self):
         """Creates whole field of gaming boxes."""
         row_num = 0
         field_of_boxes = []
@@ -42,9 +39,29 @@ class Grid():
         
         return field_of_boxes
         
-    def _draw_lines_between_boxes(self):
+    def set_up_mines(self, field_of_boxes):
+        """Place mines to field of boxes."""
+        boxes_with_mines = []
+        for num in range(self.settings.mines):
+            while True:
+                # Pick a random row.
+                random_row = choice(field_of_boxes)
+                random_box = choice(random_row)
+                
+                if random_box.has_mine:
+                    # Box already has a mine, pick another one.
+                    continue
+                else:
+                    # Box doesn't have mine, so place one there.
+                    random_box.has_mine = True
+                    boxes_with_mines.append(random_box)
+                
+                break
+        return boxes_with_mines
+        
+    def draw_lines_between_boxes(self):
         """Draw thin black lines between boxes in body rect."""
-        field = self._create_field_of_boxes()
+        field = self.create_field_of_boxes()
         grey_color = (150, 150, 150)
         
         # Draw vertical lines

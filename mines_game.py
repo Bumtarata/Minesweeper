@@ -11,14 +11,18 @@ class Minesweeper:
         """Initialize the game and create game resources."""
         pygame.init()
         
-        self.screen = Base_window()
+        self.window = Base_window()
+        self.screen = self.window.screen
         self.settings = Settings()
         
         # Create gui rects.
-        self.gui_rects = self.screen.gui._create_gui_rects()
+        self.gui_rects = self.window.gui.create_gui_rects()
         self.body_rect = self.gui_rects[-1][0]
         
         self.body_grid = Grid(self.body_rect)
+        
+        # Group for sprites to be drawn.
+        self.mines = pygame.sprite.Group()
         
         # Game flags.
         self.running = True
@@ -26,15 +30,22 @@ class Minesweeper:
     def run_game(self):
         """Start the main loop for the game."""
         # Fill window screen with color.
-        self.screen.fill_bg()
+        self.window.fill_bg()
         
         # Draw gui rects and lines.
-        self.screen.gui._draw_rects(self.gui_rects)
-        self.screen.gui._draw_lines()
+        self.window.gui.draw_rects(self.gui_rects)
+        self.window.gui.draw_lines()
         
         # Create gaming grid
-        self.body_grid._create_field_of_boxes()        # passed is body_rect without color
-        self.body_grid._draw_lines_between_boxes()
+        self.field_of_boxes = self.body_grid.create_field_of_boxes()   # passed is body_rect without color
+        self.body_grid.draw_lines_between_boxes()
+        
+        # Prepare and draw mines
+        self.boxes_with_mines = self.body_grid.set_up_mines(self.field_of_boxes)
+        for minebox in self.boxes_with_mines:
+            mine = minebox.create_mine()
+            mine.add(self.mines)
+        self.mines.draw(self.screen)
         
         while self.running:
             # Watch for keyboard and mouse events.
