@@ -40,12 +40,16 @@ class Minesweeper:
         self.field_of_boxes = self.body_grid.create_field_of_boxes()   # passed is body_rect without color
         self.body_grid.draw_lines_between_boxes()
         
-        # Prepare and draw mines
+        # Prepare and draw mines and display for each box how many adjacent
+        # mines are there.
         self.boxes_with_mines = self.body_grid.set_up_mines(self.field_of_boxes)
         for minebox in self.boxes_with_mines:
             mine = minebox.create_mine()
             mine.add(self.mines)
         self.mines.draw(self.screen)
+        self.body_grid.check_adj_boxes(self.field_of_boxes)
+        self.to_blit = self.body_grid.write_num_of_adj_mines(self.field_of_boxes)
+        self.screen.blits(self.to_blit)
         
         while self.running:
             # Watch for keyboard and mouse events.

@@ -81,3 +81,78 @@ class Grid():
                 start_pos = field[num][0].bottomleft,
                 end_pos = field[num][-1].bottomright,
             )
+    
+    def check_adj_boxes(self, field_of_boxes):
+        """For each box checks how many mines are in adjacent boxes."""
+        for row in field_of_boxes:
+            row_idx = field_of_boxes.index(row)
+            
+            for box in row:
+                box_idx = row.index(box)
+                # Skip boxes with mines on them.
+                if box.has_mine:
+                    continue
+                
+                # Get rows of interest where boxes of interest will be looked for.
+                rows_of_interest = []
+                # Check whether the box is in the first of last row.
+                if row_idx == 0:
+                    rows_of_interest.extend(field_of_boxes[row_idx:row_idx+2])
+                        
+                elif row_idx + 1 == self.settings.rows:
+                    rows_of_interest.extend(field_of_boxes[row_idx-1:row_idx+1])
+                
+                elif row_idx > 0 and row_idx < self.settings.rows - 1:
+                    rows_of_interest.extend(field_of_boxes[row_idx-1:row_idx+2])
+                
+                # Get boxes of interest from rows of interest.
+                boxes_of_interest = []
+                
+                for row_of_int in rows_of_interest:
+                    # Check whether the box is in the currently iterated row.
+                    if box in row_of_int:
+                        # Check whether the box is in the first or last column.
+                        if box_idx == 0:
+                            boxes_of_interest.append(row_of_int[box_idx+1])
+                        elif box_idx + 1 == self.settings.columns:
+                            boxes_of_interest.append(row_of_int[box_idx-1])
+                        else:
+                            boxes_of_interest.extend(
+                                [row_of_int[box_idx-1], row_of_int[box_idx+1]])
+                    
+                    else:
+                        # Check whether the box is in the first of last column.
+                        if box_idx == 0:
+                            boxes_of_interest.extend(row_of_int[box_idx:box_idx+2])
+                        elif box_idx + 1 == self.settings.columns:
+                            boxes_of_interest.extend(row_of_int[box_idx-1:box_idx+1])
+                        elif box_idx > 0 and box_idx < self.settings.columns - 1:
+                            boxes_of_interest.extend(row_of_int[box_idx-1:box_idx+2])
+                
+                # Count boxes with mines in boxes_of_interest
+                num_of_mines = 0
+                for box_of_int in boxes_of_interest:
+                    if box_of_int.has_mine:
+                        num_of_mines += 1
+                box.adjacent_mines = num_of_mines
+            
+    def write_num_of_adj_mines(self, field_of_boxes):
+        """Display the number of adjacent mines on every box."""
+        text_color = (30, 30, 30)
+        font = pygame.font.Font(None, 25)
+        to_blit = []
+        
+        for row in field_of_boxes:
+            for box in row:
+                # Skip if box contains a mine or there are zero adjacent mines.
+                if not box.adjacent_mines:
+                    continue
+                """if box.adjacent_mines == 0:
+                    continue"""
+                    
+                text = font.render(str(box.adjacent_mines), True, text_color)
+                text_rect = text.get_rect()
+                text_rect.center = box.center
+                to_blit.append((text, text_rect))
+        
+        return to_blit
