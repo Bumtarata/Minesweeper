@@ -138,8 +138,28 @@ class Grid():
             
     def write_num_of_adj_mines(self, field_of_boxes):
         """Display the number of adjacent mines on every box."""
-        text_color = (30, 30, 30)
-        font = pygame.font.Font(None, 25)
+        blue_color = (0, 0, 255)
+        green_color = (0, 130, 0)
+        red_color = (255, 0, 0)
+        dark_blue = (0, 0, 150)
+        dark_red = (140, 0, 0)
+        wierd_green = (0, 140, 140)
+        purple_color = (140, 0, 140)
+        black_color = (30, 30, 30)
+        
+        color_dict = {
+            '1': blue_color,
+            '2': green_color,
+            '3': red_color,
+            '4': dark_blue,
+            '5': dark_red,
+            '6': wierd_green,
+            '7': purple_color,
+            '8': black_color,
+        }
+        
+        font = pygame.font.Font(None, 40)
+        font.bold = True
         to_blit = []
         
         for row in field_of_boxes:
@@ -149,10 +169,13 @@ class Grid():
                     continue
                 """if box.adjacent_mines == 0:
                     continue"""
-                    
+                
+                text_color = color_dict[f'{str(box.adjacent_mines)}']
                 text = font.render(str(box.adjacent_mines), True, text_color)
                 text_rect = text.get_rect()
                 text_rect.center = box.center
+                text_rect.x += 1
+                text_rect.y += 2
                 to_blit.append((text, text_rect))
         
         return to_blit
