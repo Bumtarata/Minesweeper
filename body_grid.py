@@ -2,7 +2,7 @@ from random import choice
 
 import pygame
 
-from base_window import Base_window, Gui
+from base_window import BaseWindow, Gui
 from box import Box
 from settings import Settings
 
@@ -11,7 +11,7 @@ class Grid():
     def __init__(self, body_rect):
         """Initialize all that's necessary."""
         self.body_rect = body_rect
-        self.screen = Base_window().screen
+        self.screen = BaseWindow().screen
         self.settings = Settings()
     
     def _create_row_of_boxes(self, box_top):
@@ -39,12 +39,22 @@ class Grid():
         
         return field_of_boxes
         
+    def hide_all_boxes(self, field_of_boxes):
+        """For every box in field_of_boxes create overlay."""
+        list_of_overlays = []
+        for row in field_of_boxes:
+            for box in row:
+                overlay = box.create_overlay()
+                list_of_overlays.append(overlay)
+        
+        return list_of_overlays
+        
     def set_up_mines(self, field_of_boxes):
         """Place mines to field of boxes."""
         boxes_with_mines = []
         for num in range(self.settings.mines):
             while True:
-                # Pick a random row.
+                # Pick a random box.
                 random_row = choice(field_of_boxes)
                 random_box = choice(random_row)
                 

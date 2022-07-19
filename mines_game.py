@@ -1,6 +1,6 @@
 import pygame
 
-from base_window import Base_window
+from base_window import BaseWindow
 from body_grid import Grid
 from settings import Settings
 
@@ -11,7 +11,7 @@ class Minesweeper:
         """Initialize the game and create game resources."""
         pygame.init()
         
-        self.window = Base_window()
+        self.window = BaseWindow()
         self.screen = self.window.screen
         self.settings = Settings()
         
@@ -21,8 +21,9 @@ class Minesweeper:
         
         self.body_grid = Grid(self.body_rect)
         
-        # Group for sprites to be drawn.
+        # Groups for sprites to be drawn.
         self.mines = pygame.sprite.Group()
+        self.overlays = pygame.sprite.Group()
         
         # Game flags.
         self.running = True
@@ -50,6 +51,10 @@ class Minesweeper:
         self.body_grid.check_adj_boxes(self.field_of_boxes)
         self.to_blit = self.body_grid.write_num_of_adj_mines(self.field_of_boxes)
         self.screen.blits(self.to_blit)
+        
+        # Hide all boxes by displaying overlay on them.
+        self.overlays.add(self.body_grid.hide_all_boxes(self.field_of_boxes))
+        self.overlays.draw(self.screen)
         
         while self.running:
             # Watch for keyboard and mouse events.

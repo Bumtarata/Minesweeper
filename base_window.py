@@ -2,7 +2,7 @@ import pygame
 
 from settings import Settings
 
-class Base_window:
+class BaseWindow:
     """Class representing the base game window and gui."""
     def __init__(self):
         """Initialize game window."""
