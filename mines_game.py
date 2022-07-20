@@ -28,6 +28,15 @@ class Minesweeper:
         # Game flags.
         self.running = True
     
+    def _uncover_clicked_box(self, mouse_pos):
+        """Uncover the box that has been clicked."""
+        for row in self.field_of_boxes:
+            for box in row:
+                if box.collidepoint(mouse_pos):
+                    clicked_box = box
+        
+        clicked_box.remove_overlay(self)
+    
     def run_game(self):
         """Start the main loop for the game."""
         # Fill window screen with color.
@@ -39,18 +48,10 @@ class Minesweeper:
         
         # Create gaming grid
         self.field_of_boxes = self.body_grid.create_field_of_boxes()   # passed is body_rect without color
-        self.body_grid.draw_lines_between_boxes()
         
-        # Prepare and draw mines and display for each box how many adjacent
-        # mines are there.
+        # Set up mines and correct adjacent_mines variable for each box.
         self.boxes_with_mines = self.body_grid.set_up_mines(self.field_of_boxes)
-        for minebox in self.boxes_with_mines:
-            mine = minebox.create_mine()
-            mine.add(self.mines)
-        self.mines.draw(self.screen)
         self.body_grid.check_adj_boxes(self.field_of_boxes)
-        self.to_blit = self.body_grid.write_num_of_adj_mines(self.field_of_boxes)
-        self.screen.blits(self.to_blit)
         
         # Hide all boxes by displaying overlay on them.
         self.overlays.add(self.body_grid.hide_all_boxes(self.field_of_boxes))
@@ -61,6 +62,9 @@ class Minesweeper:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_pos = pygame.mouse.get_pos()
+                    self._uncover_clicked_box(mouse_pos)
             
             # Make the most recently drawn screen visible.
             pygame.display.flip()
