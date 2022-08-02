@@ -25,6 +25,8 @@ class Minesweeper:
         self.mines = pygame.sprite.Group()
         self.overlays = pygame.sprite.Group()
         
+        self.uncovered_boxes = []
+        
         # Game flags.
         self.running = True
     
@@ -36,6 +38,10 @@ class Minesweeper:
                     clicked_box = box
         
         clicked_box.remove_overlay(self)
+        self.uncovered_boxes.append(clicked_box)
+        for box in self.uncovered_boxes:
+            box.draw_border_lines(self.screen)
+        self.uncovered_boxes = []
     
     def run_game(self):
         """Start the main loop for the game."""

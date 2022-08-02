@@ -69,29 +69,6 @@ class Grid():
                 break
         return boxes_with_mines
         
-    def draw_lines_between_boxes(self):
-        """Draw thin black lines between boxes in body rect."""
-        field = self.create_field_of_boxes()
-        grey_color = (150, 150, 150)
-        
-        # Draw vertical lines
-        for num in range(self.settings.columns - 1):
-            pygame.draw.line(
-                surface = self.screen,
-                color = grey_color,
-                start_pos = field[0][num].topright,
-                end_pos = field[-1][num].bottomright,
-            )
-        
-        # Draw horizontal lines
-        for num in range(self.settings.rows - 1):
-            pygame.draw.line(
-                surface = self.screen,
-                color = grey_color,
-                start_pos = field[num][0].bottomleft,
-                end_pos = field[num][-1].bottomright,
-            )
-    
     def check_adj_boxes(self, field_of_boxes):
         """For each box checks how many mines are in adjacent boxes."""
         for row in field_of_boxes:

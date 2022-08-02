@@ -41,17 +41,29 @@ class Box(Rect):
         mines_game.overlays.remove(self.overlay)
         mines_game.screen.fill(self.settings.bg_color, rect=self)
         if self.has_mine == False and self.adjacent_mines > 0:
+            # box doesn't have mine but have adjacent mines; write num of adj mines
             num = self.write_adjacent_mines()[0]
             num_rect = self.write_adjacent_mines()[1]
             mines_game.screen.blit(num, num_rect)
+            mines_game.uncovered_boxes.append(self)
+        
         elif self.has_mine:
+            # box has mine; show all mines
             for row in mines_game.field_of_boxes:
                 for box in row:
                     if box.has_mine:
                         mines_game.screen.fill(self.settings.bg_color, rect=box)
                         mine = box.create_mine()
                         mines_game.mines.add(mine)
+                        if box not in mines_game.uncovered_boxes:
+                            mines_game.uncovered_boxes.append(box)
             mines_game.mines.draw(mines_game.screen)
+        
+        
+    def draw_border_lines(self, surface):
+        """Draw thin lines around given rect."""
+        vertices = (self.topleft, self.topright, self.bottomright, self.bottomleft)
+        pygame.draw.lines(surface, self.settings.outline_grey, True, vertices)
         
         
     def write_adjacent_mines(self):
