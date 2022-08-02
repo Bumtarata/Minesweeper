@@ -20,9 +20,10 @@ class Box(Rect):
         # Inherit from Rect motherclass.
         super().__init__(self.left, self.top, self.width, self.height)
         
-        # Flags
+        # Other attributes
         self.has_mine = False
         self.adjacent_mines = None
+        self.adjacent_boxes = []
         
     def create_mine(self):
         """Create mine in the box."""
@@ -40,7 +41,7 @@ class Box(Rect):
         """Remove overlay and show what's under it."""
         mines_game.overlays.remove(self.overlay)
         mines_game.screen.fill(self.settings.bg_color, rect=self)
-        if self.has_mine == False and self.adjacent_mines > 0:
+        if self.has_mine == False and self.adjacent_mines:
             # box doesn't have mine but have adjacent mines; write num of adj mines
             num = self.write_adjacent_mines()[0]
             num_rect = self.write_adjacent_mines()[1]
@@ -65,7 +66,62 @@ class Box(Rect):
         vertices = (self.topleft, self.topright, self.bottomright, self.bottomleft)
         pygame.draw.lines(surface, self.settings.outline_grey, True, vertices)
         
-        
+    def get_adjacent_boxes(self, field_of_boxes):
+        """Get all adjacent boxes and add them into self.adjacent_boxes."""
+        for row in field_of_boxes:
+            if self in row:
+                row_idx = field_of_boxes.index(row)
+                box_idx = row.index(self)
+                
+                # Get rows of interest where boxes of interest will be looked for.
+                rows_of_interest = []
+                # Check whether the box is in the first of last row.
+                if row_idx == 0:
+                    rows_of_interest.extend(field_of_boxes[row_idx:row_idx+2])
+                        
+                elif row_idx + 1 == self.settings.rows:
+                    rows_of_interest.extend(field_of_boxes[row_idx-1:row_idx+1])
+                
+                elif row_idx > 0 and row_idx < self.settings.rows - 1:
+                    rows_of_interest.extend(field_of_boxes[row_idx-1:row_idx+2])
+                
+                # Get boxes of interest from rows of interest.
+                boxes_of_interest = []
+                
+                for row_of_int in rows_of_interest:
+                    # Check whether the box is in the currently iterated row.
+                    if self in row_of_int:
+                        # Check whether the box is in the first or last column.
+                        if box_idx == 0:
+                            boxes_of_interest.append(row_of_int[box_idx+1])
+                        elif box_idx + 1 == self.settings.columns:
+                            boxes_of_interest.append(row_of_int[box_idx-1])
+                        else:
+                            boxes_of_interest.extend(
+                                [row_of_int[box_idx-1], row_of_int[box_idx+1]])
+                    
+                    else:
+                        # Check whether the box is in the first of last column.
+                        if box_idx == 0:
+                            boxes_of_interest.extend(row_of_int[box_idx:box_idx+2])
+                        elif box_idx + 1 == self.settings.columns:
+                            boxes_of_interest.extend(row_of_int[box_idx-1:box_idx+1])
+                        elif box_idx > 0 and box_idx < self.settings.columns - 1:
+                            boxes_of_interest.extend(row_of_int[box_idx-1:box_idx+2])
+                            
+                self.adjacent_boxes.extend(boxes_of_interest)
+                return
+                
+    def count_adjacent_mines(self):
+        """Assign proper number to self.adjacent_mines if there are any
+        adjacent mines."""
+        num_of_mines = 0
+        for box in self.adjacent_boxes:
+            if box.has_mine:
+                num_of_mines += 1
+        if num_of_mines > 0:
+            self.adjacent_mines = num_of_mines
+    
     def write_adjacent_mines(self):
         """Write to box number of adjacent mines."""
         blue_color = (0, 0, 255)
