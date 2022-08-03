@@ -21,9 +21,11 @@ class Box(Rect):
         super().__init__(self.left, self.top, self.width, self.height)
         
         # Other attributes
+        self.covered = True
         self.has_mine = False
         self.adjacent_mines = None
         self.adjacent_boxes = []
+        self.adj_boxes_checked = False
         
     def create_mine(self):
         """Create mine in the box."""
@@ -46,19 +48,22 @@ class Box(Rect):
             num = self.write_adjacent_mines()[0]
             num_rect = self.write_adjacent_mines()[1]
             mines_game.screen.blit(num, num_rect)
-            mines_game.uncovered_boxes.append(self)
+            self.draw_border_lines(mines_game.screen)
+            self.covered = False
         
         elif self.has_mine:
             # box has mine; show all mines
-            for row in mines_game.field_of_boxes:
-                for box in row:
-                    if box.has_mine:
-                        mines_game.screen.fill(self.settings.bg_color, rect=box)
-                        mine = box.create_mine()
-                        mines_game.mines.add(mine)
-                        if box not in mines_game.uncovered_boxes:
-                            mines_game.uncovered_boxes.append(box)
+            for box in mines_game.boxes_with_mines:
+                mines_game.screen.fill(self.settings.bg_color, rect=box)
+                mine = box.create_mine()
+                mines_game.mines.add(mine)
             mines_game.mines.draw(mines_game.screen)
+            for box in mines_game.boxes_with_mines:
+                box.draw_border_lines(mines_game.screen)
+                box.covered = False
+            
+        elif self.has_mine == False and not self.adjacent_mines:
+            self.draw_border_lines(mines_game.screen)
         
         
     def draw_border_lines(self, surface):

@@ -25,8 +25,6 @@ class Minesweeper:
         self.mines = pygame.sprite.Group()
         self.overlays = pygame.sprite.Group()
         
-        self.uncovered_boxes = []
-        
         # Game flags.
         self.running = True
     
@@ -37,11 +35,34 @@ class Minesweeper:
                 if box.collidepoint(mouse_pos):
                     clicked_box = box
         
-        clicked_box.remove_overlay(self)
-        self.uncovered_boxes.append(clicked_box)
-        for box in self.uncovered_boxes:
-            box.draw_border_lines(self.screen)
-        self.uncovered_boxes = []
+        if clicked_box.covered:
+            clicked_box.covered = False
+            uncovering_boxes = [clicked_box]
+            
+            if clicked_box.has_mine:
+                uncovering_boxes = []
+                uncovering_boxes.extend(self.boxes_with_mines)
+                for box in self.boxes_with_mines:
+                    box.covered = False
+            
+            elif not clicked_box.adjacent_mines:
+                
+                while True:
+                    copy_uncovering_boxes = list(uncovering_boxes)
+                    for box in copy_uncovering_boxes:
+                        if not box.adjacent_mines and not box.adj_boxes_checked:
+                            for adj_box in box.adjacent_boxes:
+                                if adj_box not in uncovering_boxes and adj_box.covered:
+                                    uncovering_boxes.append(adj_box)
+                                    adj_box.covered = False
+                            
+                            box.adj_boxes_checked = True
+                    
+                    if uncovering_boxes == copy_uncovering_boxes:
+                        break
+            
+            for box in uncovering_boxes:
+                box.remove_overlay(self)
     
     def run_game(self):
         """Start the main loop for the game."""
