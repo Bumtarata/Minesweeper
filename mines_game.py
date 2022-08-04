@@ -17,7 +17,7 @@ class Minesweeper:
         
         # Create gui rects.
         self.gui_rects = self.window.gui.create_gui_rects()
-        self.body_rect = self.gui_rects[-1][0]
+        self.body_rect = self.gui_rects[0][0]
         
         self.body_grid = Grid(self.body_rect)
         
@@ -94,7 +94,8 @@ class Minesweeper:
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if self.active:
                         mouse_pos = pygame.mouse.get_pos()
-                        self._uncover_clicked_box(mouse_pos)
+                        if self.window.gui.body_rect.collidepoint(mouse_pos):
+                            self._uncover_clicked_box(mouse_pos)
             
             # Make the most recently drawn screen visible.
             pygame.display.flip()

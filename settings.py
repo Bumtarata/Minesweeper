@@ -3,14 +3,13 @@ class Settings:
     def __init__(self):
         """Initialize the game's settings"""
         # Screen settings
-        self.screen_width = 315
-        self.screen_height = 395
-        self.bg_color = (200, 200, 200)
-        self.outline_white = (250, 250, 250)
-        self.outline_grey = (150, 150, 150)
+        self.thickness_of_edges = 21
+        self.bg_color = (195, 195, 195)
+        self.outline_white = (245, 245, 245)
+        self.outline_grey = (120, 120, 120)
         
         # Single box of mine field settings
-        self.box_width = 31
+        self.box_width = 30
         self.box_height = self.box_width
         
         # Mine field settings

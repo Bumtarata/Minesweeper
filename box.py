@@ -71,8 +71,11 @@ class Box(Rect):
         
     def draw_border_lines(self, surface):
         """Draw thin lines around given rect."""
-        vertices = (self.topleft, self.topright, self.bottomright, self.bottomleft)
-        pygame.draw.lines(surface, self.settings.outline_grey, True, vertices)
+        topright_vertice = self.topright[0] - 1, self.topright[1]
+        topleft_vertice = self.topleft
+        bottomleft_vertice = self.bottomleft[0], self.bottomleft[1] - 1
+        vertices = (topright_vertice, topleft_vertice, bottomleft_vertice)
+        pygame.draw.lines(surface, self.settings.outline_grey, False, vertices)
         
     def get_adjacent_boxes(self, field_of_boxes):
         """Get all adjacent boxes and add them into self.adjacent_boxes."""
@@ -152,7 +155,7 @@ class Box(Rect):
             '8': black_color,
         }
         
-        font = pygame.font.Font(None, 40)
+        font = pygame.font.Font(None, 39)
         font.bold = True
         
         text_color = color_dict[f'{str(self.adjacent_mines)}']

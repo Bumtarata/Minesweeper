@@ -17,7 +17,7 @@ class BoxOverlay(pygame.sprite.Sprite):
         surf = pygame.Surface((self.settings.box_width, self.settings.box_height))
         surf.fill(self.settings.bg_color)
         rect = surf.get_rect()
-        line_width = 5
+        line_width = 4
         
         # Draw grey and white lines around box.
         for a in range(line_width):
