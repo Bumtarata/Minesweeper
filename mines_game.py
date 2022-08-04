@@ -27,6 +27,7 @@ class Minesweeper:
         
         # Game flags.
         self.running = True
+        self.active = True
     
     def _uncover_clicked_box(self, mouse_pos):
         """Uncover the box that has been clicked."""
@@ -44,6 +45,7 @@ class Minesweeper:
                 uncovering_boxes.extend(self.boxes_with_mines)
                 for box in self.boxes_with_mines:
                     box.covered = False
+                self.active = False
             
             elif not clicked_box.adjacent_mines:
                 
@@ -62,7 +64,7 @@ class Minesweeper:
                         break
             
             for box in uncovering_boxes:
-                box.remove_overlay(self)
+                box.remove_overlay(self, clicked_box)
     
     def run_game(self):
         """Start the main loop for the game."""
@@ -90,8 +92,9 @@ class Minesweeper:
                 if event.type == pygame.QUIT:
                     self.running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    mouse_pos = pygame.mouse.get_pos()
-                    self._uncover_clicked_box(mouse_pos)
+                    if self.active:
+                        mouse_pos = pygame.mouse.get_pos()
+                        self._uncover_clicked_box(mouse_pos)
             
             # Make the most recently drawn screen visible.
             pygame.display.flip()

@@ -39,7 +39,7 @@ class Box(Rect):
         self.overlay.rect.center = self.center
         return self.overlay
         
-    def remove_overlay(self, mines_game):
+    def remove_overlay(self, mines_game, clicked_box):
         """Remove overlay and show what's under it."""
         mines_game.overlays.remove(self.overlay)
         mines_game.screen.fill(self.settings.bg_color, rect=self)
@@ -57,7 +57,10 @@ class Box(Rect):
                 mines_game.screen.fill(self.settings.bg_color, rect=box)
                 mine = box.create_mine()
                 mines_game.mines.add(mine)
+            
+            mines_game.screen.fill((255, 0, 0), rect=clicked_box)
             mines_game.mines.draw(mines_game.screen)
+            
             for box in mines_game.boxes_with_mines:
                 box.draw_border_lines(mines_game.screen)
                 box.covered = False
