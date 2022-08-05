@@ -1,5 +1,6 @@
 import pygame
 
+from draw_lines_around_rect import draw_lines_around_rect as rect_lines
 from settings import Settings
 
 class BaseWindow:
@@ -91,139 +92,11 @@ class Gui:
         """Draw given rects with given color."""
         for one_rect in all_rects:
             self.screen.fill(one_rect[1], rect=one_rect[0])
-            
+    
     def draw_lines(self):
         """Draw border lines."""
-        line_width = 6
-        
-        # lines around body_rect
-        for a in range(line_width):
-            gv_start_pos = (self.body_rect.topleft[0] - a,
-                self.body_rect.topleft[1] - line_width+1)
-            gv_end_pos = (self.body_rect.topleft[0] - a,
-                self.body_rect.bottomleft[1] + a)
-            grey_vertical = pygame.draw.line(self.screen, self.settings.outline_grey,
-                gv_start_pos, gv_end_pos)
-        
-        for a in range(line_width):
-            gh_start_pos = (self.body_rect.topleft[0] - line_width+1,
-                self.body_rect.topleft[1] - a)
-            gh_end_pos = (self.body_rect.topright[0] + a,
-                self.body_rect.topright[1] - a)
-            grey_horizontal = pygame.draw.line(self.screen, self.settings.outline_grey,
-                gh_start_pos, gh_end_pos)
-        
-        for a in range(line_width):
-            wv_start_pos = (self.body_rect.bottomright[0] + a,
-                self.body_rect.bottomright[1] + line_width-1)
-            wv_end_pos = (self.body_rect.topright[0] + a,
-                self.body_rect.topright[1] - a)
-            white_vertical = pygame.draw.line(self.screen, self.settings.outline_white,
-                wv_start_pos, wv_end_pos)
-        
-        for a in range(line_width):
-            wh_start_pos = (self.body_rect.bottomright[0] + line_width-1,
-                self.body_rect.bottomright[1] + a)
-            wh_end_pos = (self.body_rect.bottomleft[0] - a,
-                self.body_rect.bottomleft[1] + a)
-            white_horizontal = pygame.draw.line(self.screen, self.settings.outline_white,
-                wh_start_pos, wh_end_pos)
-                
-        # lines around head_rect
-        for a in range(line_width):
-            gv_start_pos = (self.head_rect.topleft[0] - a,
-                self.head_rect.topleft[1] - line_width+1)
-            gv_end_pos = (self.head_rect.topleft[0] - a,
-                self.head_rect.bottomleft[1] + a)
-            grey_vertical = pygame.draw.line(self.screen, self.settings.outline_grey,
-                gv_start_pos, gv_end_pos)
-        
-        for a in range(line_width):
-            gh_start_pos = (self.head_rect.topleft[0] - line_width+1,
-                self.head_rect.topleft[1] - a)
-            gh_end_pos = (self.head_rect.topright[0] + a,
-                self.head_rect.topright[1] - a)
-            grey_horizontal = pygame.draw.line(self.screen, self.settings.outline_grey,
-                gh_start_pos, gh_end_pos)
-        
-        for a in range(line_width):
-            wv_start_pos = (self.head_rect.bottomright[0] + a,
-                self.head_rect.bottomright[1] + line_width-1)
-            wv_end_pos = (self.head_rect.topright[0] + a,
-                self.head_rect.topright[1] - a)
-            white_vertical = pygame.draw.line(self.screen, self.settings.outline_white,
-                wv_start_pos, wv_end_pos)
-        
-        for a in range(line_width):
-            wh_start_pos = (self.head_rect.bottomright[0] + line_width-1,
-                self.head_rect.bottomright[1] + a)
-            wh_end_pos = (self.head_rect.bottomleft[0] - a,
-                self.head_rect.bottomleft[1] + a)
-            white_horizontal = pygame.draw.line(self.screen, self.settings.outline_white,
-                wh_start_pos, wh_end_pos)
-                
-        # lines for mines_left_rect
-        for a in range(2):
-            gv_start_pos = (self.mines_left_rect.topleft[0] - a,
-                self.mines_left_rect.topleft[1] - 2+1)
-            gv_end_pos = (self.mines_left_rect.topleft[0] - a,
-                self.mines_left_rect.bottomleft[1] + a)
-            grey_vertical = pygame.draw.line(self.screen, self.settings.outline_grey,
-                gv_start_pos, gv_end_pos)
-        
-        for a in range(2):
-            gh_start_pos = (self.mines_left_rect.topleft[0] - 2+1,
-                self.mines_left_rect.topleft[1] - a)
-            gh_end_pos = (self.mines_left_rect.topright[0] + a,
-                self.mines_left_rect.topright[1] - a)
-            grey_horizontal = pygame.draw.line(self.screen, self.settings.outline_grey,
-                gh_start_pos, gh_end_pos)
-        
-        for a in range(2):
-            wv_start_pos = (self.mines_left_rect.bottomright[0] + a,
-                self.mines_left_rect.bottomright[1] + 2-1)
-            wv_end_pos = (self.mines_left_rect.topright[0] + a,
-                self.mines_left_rect.topright[1] - a)
-            white_vertical = pygame.draw.line(self.screen, self.settings.outline_white,
-                wv_start_pos, wv_end_pos)
-        
-        for a in range(2):
-            wh_start_pos = (self.mines_left_rect.bottomright[0] + 2-1,
-                self.mines_left_rect.bottomright[1] + a)
-            wh_end_pos = (self.mines_left_rect.bottomleft[0] - a,
-                self.mines_left_rect.bottomleft[1] + a)
-            white_horizontal = pygame.draw.line(self.screen, self.settings.outline_white,
-                wh_start_pos, wh_end_pos)
-        
-        # lines for time_rect
-        for a in range(2):
-            gv_start_pos = (self.time_rect.topleft[0] - a,
-                self.time_rect.topleft[1] - 2+1)
-            gv_end_pos = (self.time_rect.topleft[0] - a,
-                self.time_rect.bottomleft[1] + a)
-            grey_vertical = pygame.draw.line(self.screen, self.settings.outline_grey,
-                gv_start_pos, gv_end_pos)
-        
-        for a in range(2):
-            gh_start_pos = (self.time_rect.topleft[0] - 2+1,
-                self.time_rect.topleft[1] - a)
-            gh_end_pos = (self.time_rect.topright[0] + a,
-                self.time_rect.topright[1] - a)
-            grey_horizontal = pygame.draw.line(self.screen, self.settings.outline_grey,
-                gh_start_pos, gh_end_pos)
-        
-        for a in range(2):
-            wv_start_pos = (self.time_rect.bottomright[0] + a,
-                self.time_rect.bottomright[1] + 2-1)
-            wv_end_pos = (self.time_rect.topright[0] + a,
-                self.time_rect.topright[1] - a)
-            white_vertical = pygame.draw.line(self.screen, self.settings.outline_white,
-                wv_start_pos, wv_end_pos)
-        
-        for a in range(2):
-            wh_start_pos = (self.time_rect.bottomright[0] + 2-1,
-                self.time_rect.bottomright[1] + a)
-            wh_end_pos = (self.time_rect.bottomleft[0] - a,
-                self.time_rect.bottomleft[1] + a)
-            white_horizontal = pygame.draw.line(self.screen, self.settings.outline_white,
-                wh_start_pos, wh_end_pos)
+        rect_lines(self.body_rect, self.screen)     # lines around body_rect
+        rect_lines(self.head_rect, self.screen)     # lines around head_rect
+        rect_lines(self.mines_left_rect, self.screen, thickness=2)  # lines for mines_left_rect
+        rect_lines(self.time_rect, self.screen, thickness=2)        # lines for time_rect
+        rect_lines(self.screen_rect, self.screen, inside=True, invert=True)
