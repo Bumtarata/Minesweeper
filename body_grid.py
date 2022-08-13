@@ -2,24 +2,23 @@ from random import choice
 
 import pygame
 
-from base_window import BaseWindow, Gui
 from box import Box
-from settings import Settings
 
 class Grid():
     """Class for grid in body_rect. This is the main part of the game."""
-    def __init__(self, body_rect):
+    def __init__(self, mines_game):
         """Initialize all that's necessary."""
-        self.body_rect = body_rect
-        self.screen = BaseWindow().screen
-        self.settings = Settings()
+        self.body_rect = mines_game.body_rect
+        self.mines_game = mines_game
+        self.screen = mines_game.screen
+        self.settings = mines_game.settings
     
     def _create_row_of_boxes(self, box_top):
         """Create a single row of gaming boxes in body rect."""
         box_num = 0
         row_of_boxes = []
         for box in range(self.settings.columns):   # box is rect
-            box = Box()
+            box = Box(self.mines_game)
             box.left = self.body_rect.left + (box.width * box_num)
             box.top = box_top
             row_of_boxes.append(box)
@@ -75,3 +74,10 @@ class Grid():
             for box in row:
                 box.get_adjacent_boxes(field_of_boxes)
                 box.count_adjacent_mines()
+                
+    def uncover_left_boxes(self, field_of_boxes):
+        """Uncover all boxes that weren't uncovered yet,"""
+        for row in field_of_boxes:
+            for box in row:
+                if box.covered and not box.marked :
+                    box.remove_overlay(box)

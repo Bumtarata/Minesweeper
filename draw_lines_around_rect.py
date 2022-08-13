@@ -1,12 +1,10 @@
 import pygame
 
-from settings import Settings
-
-def draw_lines_around_rect(rect, surf, thickness=6, inside=False, invert=False):
+def draw_lines_around_rect(mines_game, rect, surf, thickness=6, inside=False, invert=False):
         """Draw white and grey lines around given rect into given surface. As
         default lines will be drawn outside of the rect with grey lines at top
         and left."""
-        settings = Settings()
+        settings = mines_game.settings
         
         # Check if colors should be inverted.
         if invert == False:

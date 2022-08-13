@@ -2,14 +2,14 @@ import pygame
 from pygame import Rect
 
 from box_overlay import BoxOverlay
-from mine import Mine
-from settings import Settings
+from picture import Picture
 
 class Box(Rect):
     """Class representing single box."""
-    def __init__(self):
+    def __init__(self, mines_game):
         """Initialize the box."""
-        self.settings = Settings()
+        self.settings = mines_game.settings
+        self.mines_game = mines_game
         
         # Position and size
         self.left = 0
@@ -26,47 +26,54 @@ class Box(Rect):
         self.adjacent_mines = None
         self.adjacent_boxes = []
         self.adj_boxes_checked = False
+        self.marked = False
         
+    def marked_mine_sign(self):
+        """Place marked_mine sign to box."""
+        self.sign = Picture(self.mines_game, picture_type='marked_mine')
+        self.sign.rect.center = self.center
+        return self.sign
+    
     def create_mine(self):
         """Create mine in the box."""
-        self.mine = Mine()
+        self.mine = Picture(self.mines_game)
         self.mine.rect.center = self.center
         return self.mine
         
     def create_overlay(self):
         """Hide box by displaying box overlay on it."""
-        self.overlay = BoxOverlay(self)
+        self.overlay = BoxOverlay(self, self.mines_game)
         self.overlay.rect.center = self.center
         return self.overlay
         
-    def remove_overlay(self, mines_game, clicked_box):
+    def remove_overlay(self, clicked_box):
         """Remove overlay and show what's under it."""
-        mines_game.overlays.remove(self.overlay)
-        mines_game.screen.fill(self.settings.bg_color, rect=self)
+        self.mines_game.overlays.remove(self.overlay)
+        self.mines_game.screen.fill(self.settings.bg_color, rect=self)
         if self.has_mine == False and self.adjacent_mines:
             # box doesn't have mine but have adjacent mines; write num of adj mines
             num = self.write_adjacent_mines()[0]
             num_rect = self.write_adjacent_mines()[1]
-            mines_game.screen.blit(num, num_rect)
-            self.draw_border_lines(mines_game.screen)
+            self.mines_game.screen.blit(num, num_rect)
+            self.draw_border_lines(self.mines_game.screen)
             self.covered = False
         
         elif self.has_mine:
             # box has mine; show all mines
-            for box in mines_game.boxes_with_mines:
-                mines_game.screen.fill(self.settings.bg_color, rect=box)
+            for box in self.mines_game.boxes_with_mines:
+                self.mines_game.screen.fill(self.settings.bg_color, rect=box)
                 mine = box.create_mine()
-                mines_game.mines.add(mine)
+                self.mines_game.mines.add(mine)
             
-            mines_game.screen.fill((255, 0, 0), rect=clicked_box)
-            mines_game.mines.draw(mines_game.screen)
+            self.mines_game.screen.fill((255, 0, 0), rect=clicked_box)
+            self.mines_game.mines.draw(self.mines_game.screen)
             
-            for box in mines_game.boxes_with_mines:
-                box.draw_border_lines(mines_game.screen)
+            for box in self.mines_game.boxes_with_mines:
+                box.draw_border_lines(self.mines_game.screen)
                 box.covered = False
             
         elif self.has_mine == False and not self.adjacent_mines:
-            self.draw_border_lines(mines_game.screen)
+            self.draw_border_lines(self.mines_game.screen)
         
         
     def draw_border_lines(self, surface):
