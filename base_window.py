@@ -1,6 +1,8 @@
 import pygame
 
 from draw_lines_around_rect import draw_lines_around_rect as rect_lines
+from picture import Picture
+from restart_button import RestartButton
 
 class BaseWindow:
     """Class representing the base game window and gui."""
@@ -34,7 +36,7 @@ class Gui:
         self.screen_rect = base_window.screen.get_rect()
         
         font_file = 'font/DSEG7-Classic/DSEG7Classic-Bold.ttf'
-        self.font = pygame.font.Font(font_file, 36)
+        self.font = pygame.font.Font(font_file, 37)
         self.bright_red = (255, 0, 0)
         
     def create_gui_rects(self):
@@ -64,7 +66,7 @@ class Gui:
             hr_top_edge,
             hr_width,
             hr_height)
-        self.head_rect_color = (self.settings.bg_color)
+        self.head_rect_color = self.settings.bg_color
         
         self.mines_left_rect = pygame.Rect(
             self.head_rect.left + 7,
@@ -78,18 +80,12 @@ class Gui:
         self.time_rect.y = self.mines_left_rect.y
         self.time_rect_color = self.mines_left_rect_color
         
-        self.restart_rect = pygame.Rect(0, 0, self.mines_left_rect.height,
-            self.mines_left_rect.height)
-        self.restart_rect.center = self.head_rect.center
-        self.restart_rect_color = (230, 230, 0)
-        
         # Return list of rects and its colors tuples.
         all_basic_gui_rects = [
             (self.body_rect, self.body_rect_color),
             (self.head_rect, self.head_rect_color),
             (self.mines_left_rect, self.mines_left_rect_color),
             (self.time_rect, self.time_rect_color),
-            (self.restart_rect, self.restart_rect_color),
         ]
         return all_basic_gui_rects
         
@@ -98,20 +94,19 @@ class Gui:
         for one_rect in all_rects:
             self.screen.fill(one_rect[1], rect=one_rect[0])
         
-        mines_bg_text = self.font.render('888', True, (80, 0, 0), (0, 0, 0))
-        mines_bg_text_rect = mines_bg_text.get_rect()
-        mines_bg_text_rect.center = all_rects[2][0].center
-        self.screen.blit(mines_bg_text, mines_bg_text_rect)
-    
+        # Create and draw restart_button.
+        self.restart_button = RestartButton(self.mines_game)
+        self.restart_button.draw_button()
+       
     def draw_lines(self):
         """Draw border lines."""
         rect_lines(self.mines_game, self.body_rect, self.screen)     # lines around body_rect
         rect_lines(self.mines_game, self.head_rect, self.screen)     # lines around head_rect
-        rect_lines(self.mines_game, self.mines_left_rect, self.screen, thickness=2)  # lines for mines_left_rect
-        rect_lines(self.mines_game, self.time_rect, self.screen, thickness=2)        # lines for time_rect
+        rect_lines(self.mines_game, self.mines_left_rect, self.screen, thickness=3)  # lines for mines_left_rect
+        rect_lines(self.mines_game, self.time_rect, self.screen, thickness=3)        # lines for time_rect
         rect_lines(self.mines_game, self.screen_rect, self.screen, inside=True, invert=True)
         
-    def set_mines_left(self, num):
+    def show_mines_left(self, num):
         """Writes number of mines that yet needs to be discovered to the 
         mines_left_rect."""
         mines_num = str(num)
@@ -124,6 +119,7 @@ class Gui:
         text_rect = text.get_rect()
         text_rect.center = self.mines_left_rect.center
         
+        # background numbers
         mines_bg_text = self.font.render('888', True, (80, 0, 0), (0, 0, 0))
         mines_bg_text_rect = mines_bg_text.get_rect()
         mines_bg_text_rect.center = self.mines_left_rect.center
@@ -131,10 +127,21 @@ class Gui:
         
         self.screen.blit(text, text_rect)
         
-    def set_timer(self):
-        """Counts seconds left from the start of playing the game and writes
-        it to the time_rect."""
+    def show_time(self, time_left):
+        """Show time_left in time_rect."""
+        # background numbers
         timer_bg_text = self.font.render('888', True, (80, 0, 0), (0, 0, 0))
         timer_bg_text_rect = timer_bg_text.get_rect()
         timer_bg_text_rect.center = self.time_rect.center
         self.screen.blit(timer_bg_text, timer_bg_text_rect)
+        
+        time_left = str(time_left)
+        if len(time_left) == 2:
+            time_left = f'0{time_left}'
+        elif len(time_left) == 1:
+            time_left = f'00{time_left}'
+            
+        text = self.font.render(time_left, True, self.bright_red)
+        text_rect = text.get_rect()
+        text_rect.center = self.time_rect.center
+        self.screen.blit(text, text_rect)

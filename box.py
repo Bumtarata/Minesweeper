@@ -40,9 +40,11 @@ class Box(Rect):
         self.mine.rect.center = self.center
         return self.mine
         
-    def create_overlay(self):
+    def create_overlay(self, color='def_color'):
         """Hide box by displaying box overlay on it."""
-        self.overlay = BoxOverlay(self, self.mines_game)
+        if color == 'def_color':
+            color = self.settings.bg_color
+        self.overlay = BoxOverlay(self, self.mines_game, color)
         self.overlay.rect.center = self.center
         return self.overlay
         
@@ -61,16 +63,18 @@ class Box(Rect):
         elif self.has_mine:
             # box has mine; show all mines
             for box in self.mines_game.boxes_with_mines:
-                self.mines_game.screen.fill(self.settings.bg_color, rect=box)
-                mine = box.create_mine()
-                self.mines_game.mines.add(mine)
+                if box.marked == False:
+                    self.mines_game.screen.fill(self.settings.bg_color, rect=box)
+                    mine = box.create_mine()
+                    self.mines_game.mines.add(mine)
             
             self.mines_game.screen.fill((255, 0, 0), rect=clicked_box)
             self.mines_game.mines.draw(self.mines_game.screen)
             
             for box in self.mines_game.boxes_with_mines:
-                box.draw_border_lines(self.mines_game.screen)
-                box.covered = False
+                if box.marked == False:
+                    box.draw_border_lines(self.mines_game.screen)
+                    box.covered = False
             
         elif self.has_mine == False and not self.adjacent_mines:
             self.draw_border_lines(self.mines_game.screen)
