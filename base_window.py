@@ -14,12 +14,12 @@ class BaseWindow:
         # Create game window
         window_width = ((self.settings.box_width * self.settings.columns) +
             (self.settings.thickness_of_edges * 2))
-        window_height = ((self.settings.box_height * (self.settings.rows + 2)) +
+        window_height = ((self.settings.box_height * (self.settings.rows + 3)) +
             (self.settings.thickness_of_edges * 3))
         pygame.display.set_caption("Minesweeper")
         self.screen = pygame.display.set_mode((window_width, window_height))
         
-        # Create a gui.
+        # Create a gui instance.
         self.gui = Gui(self)
         
     def fill_bg(self):
@@ -53,13 +53,29 @@ class Gui:
             br_top_edge, 
             br_width,
             br_height)
-        self.body_rect_color = (self.settings.bg_color)
+        self.body_rect_color = self.settings.bg_color
+        
+        # Create menu bar rect.
+        mb_width = self.screen_rect.width
+        mb_height = self.settings.menu_height
+        self.menu_bar_rect = pygame.Rect(0, 0, mb_width, mb_height)
+        self.menu_bar_rect_color = self.settings.menu_color
+        self.screen.fill(self.menu_bar_rect_color, self.menu_bar_rect)
+        
+        # Create dropdown menu rect.
+        dropdown_left = self.menu_bar_rect.left
+        dropdown_top = self.menu_bar_rect.bottom
+        dropdown_width = 100
+        dropdown_height = 3 * self.settings.box_height
+        self.dropdown_rect = pygame.Rect(dropdown_left, dropdown_top,
+            dropdown_width, dropdown_height)
+        self.dropdown_rect_color = self.settings.menu_color
         
         # Create head rects.
         hr_width = br_width
         hr_height = self.settings.box_height * 2
         hr_left_edge = br_left_edge
-        hr_top_edge = self.settings.thickness_of_edges
+        hr_top_edge = self.settings.thickness_of_edges + mb_height
         
         self.head_rect = pygame.Rect(
             hr_left_edge,
@@ -74,6 +90,13 @@ class Gui:
             self.head_rect.width // 3,
             self.head_rect.height - 14)
         self.mines_left_rect_color = (0, 0, 0)
+        
+        # Rect containing everything besides menu bar.
+        big_left = 0
+        big_top = self.menu_bar_rect.height
+        big_width = self.screen_rect.width
+        big_height = self.screen_rect.height - self.menu_bar_rect.height
+        self.big_rect = pygame.Rect(big_left, big_top, big_width, big_height)
         
         self.time_rect = pygame.Rect(self.mines_left_rect)
         self.time_rect.right = self.head_rect.right - 7
@@ -104,8 +127,46 @@ class Gui:
         rect_lines(self.mines_game, self.head_rect, self.screen)     # lines around head_rect
         rect_lines(self.mines_game, self.mines_left_rect, self.screen, thickness=3)  # lines for mines_left_rect
         rect_lines(self.mines_game, self.time_rect, self.screen, thickness=3)        # lines for time_rect
-        rect_lines(self.mines_game, self.screen_rect, self.screen, inside=True, invert=True)
+        rect_lines(self.mines_game, self.big_rect, self.screen, inside=True, invert=True)
         
+    def show_menu_buttons(self, difficulty=False, scoreboard=False, clicked=False):
+        """Create menu buttons"""
+        font = pygame.font.SysFont(self.settings.menu_font_type, 14, bold=True)
+        if clicked:
+            font_color = (255, 255, 255)
+            rect_bg_color = (0, 0, 150)
+        elif not clicked:
+            font_color = (0, 0, 0)
+            rect_bg_color = self.settings.menu_color
+        
+        # Difficulty button.
+        if difficulty:
+            diff_left = self.menu_bar_rect.left
+            diff_top = self.menu_bar_rect.top
+            diff_width = 80
+            diff_height = self.menu_bar_rect.height
+            self.diff_rect = pygame.Rect(diff_top, diff_left, diff_width, diff_height)
+            self.screen.fill(rect_bg_color, self.diff_rect)
+            diff_text = font.render('Difficulty', True, font_color, rect_bg_color)
+            diff_text_rect = diff_text.get_rect()
+            diff_text_rect.center = self.diff_rect.center
+            diff_text_rect.y += 1
+            self.screen.blit(diff_text, diff_text_rect)
+        
+        # Scoreboard button.
+        if scoreboard:
+            sb_left = self.menu_bar_rect.left + 81
+            sb_top = self.menu_bar_rect.top
+            sb_width = 90
+            sb_height = self.menu_bar_rect.height
+            self.scoreboard_rect = pygame.Rect(sb_left, sb_top, sb_width, sb_height)
+            self.screen.fill(rect_bg_color, self.scoreboard_rect)
+            sb_text = font.render('Scoreboard', True, font_color, rect_bg_color)
+            sb_text_rect = sb_text.get_rect()
+            sb_text_rect.center = self.scoreboard_rect.center
+            sb_text_rect.y += 1
+            self.screen.blit(sb_text, sb_text_rect)
+    
     def show_mines_left(self, num):
         """Writes number of mines that yet needs to be discovered to the 
         mines_left_rect."""

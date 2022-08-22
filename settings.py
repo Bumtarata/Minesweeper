@@ -16,3 +16,8 @@ class Settings:
         self.columns = 9
         self.rows = 9
         self.mines = 10
+        
+        # Menu bar settings
+        self.menu_height = 20
+        self.menu_color = (170, 170, 170)
+        self.menu_font_type = 'calibri'

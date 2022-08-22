@@ -15,11 +15,17 @@ class Minesweeper:
         self.window = BaseWindow(self)
         self.screen = self.window.screen
         
+        # Fill window screen with color.
+        self.window.fill_bg()
+        
         # Create gui rects.
         self.gui_rects = self.window.gui.create_gui_rects()
         self.body_rect = self.gui_rects[0][0]
         
         self.body_grid = Grid(self)
+        
+        # Draw menu buttons
+        self.window.gui.show_menu_buttons(difficulty=True, scoreboard=True)
         
         # Groups for sprites to be drawn.
         self.mines = pygame.sprite.Group()
@@ -33,6 +39,15 @@ class Minesweeper:
         self.timer_active = False
         self.mines_left = self.settings.mines
         self.time_left = 0
+        self.diff_highlighted = False
+        self.sb_highlighted = False
+        self.dropdown_menu_shown = False
+        self.checked_beg = True
+        self.checked_int = False
+        self.checked_exp = False
+        
+        # Clock for limiting game's fps.
+        self.clock = pygame.time.Clock()
         
     
     def _uncover_clicked_box(self, mouse_pos):
@@ -170,7 +185,102 @@ class Minesweeper:
         """Count seconds that passed since the first click on body_rect."""
         self.time_left += 1
         self.window.gui.show_time(self.time_left)
+    
+    def highlight_menu_button(self, mouse_pos):
+        """Highlight menu button, when cursor is over it."""
+        rects = [self.window.gui.diff_rect, self.window.gui.scoreboard_rect]
+        for rect in rects:
+            if rect.collidepoint(mouse_pos):
+                if rect == rects[0] and self.diff_highlighted == False:
+                    self.diff_highlighted = True
+                    self.window.gui.show_menu_buttons(difficulty=True, clicked=True)
+                    
+                elif rect == rects[1] and self.sb_highlighted == False:
+                    self.sb_highlighted = True
+                    self.window.gui.show_menu_buttons(scoreboard=True, clicked=True)
         
+        if not rects[0].collidepoint(mouse_pos) and rects[1].collidepoint(mouse_pos):
+            if self.diff_highlighted:
+                self.diff_highlighted = False
+                self.window.gui.show_menu_buttons(difficulty=True)
+        
+        elif rects[0].collidepoint(mouse_pos) and not rects[1].collidepoint(mouse_pos):
+            if self.sb_highlighted:
+                self.sb_highlighted = False
+                self.window.gui.show_menu_buttons(scoreboard=True)
+        
+        elif not rects[0].collidepoint(mouse_pos) and not rects[1].collidepoint(mouse_pos):
+            if self.diff_highlighted and not self.window.gui.dropdown_rect.collidepoint(mouse_pos):
+                self.diff_highlighted = False
+                self.window.gui.show_menu_buttons(difficulty=True)
+                
+            elif self.sb_highlighted:
+                self.sb_highlighted = False
+                self.window.gui.show_menu_buttons(scoreboard=True)
+    
+    def show_dropdown_window(self, checked_beg=False, checked_int=False, checked_exp=False, checked_cstm=False):
+        """Show dropdown window of difficulty menu."""
+        dd_rect = self.window.gui.dropdown_rect
+        dd_rect_color = self.window.gui.dropdown_rect_color
+        # Fill dd_rect with color
+        self.screen.fill(dd_rect_color, dd_rect)
+        
+        # Create rects for individual difficulty option.
+        diff_opt_rects = []
+        num_of_options = 4
+        for num in range(1, num_of_options+1):
+            rect_left = dd_rect.left
+            rect_top = dd_rect.top * num
+            rect_width = dd_rect.width
+            rect_height = dd_rect.height / num_of_options
+            rect = pygame.Rect(rect_left, rect_top, rect_width, rect_height)
+            diff_opt_rects.append(rect)
+        
+        for opt_rect in diff_opt_rects:
+            if opt_rect == diff_opt_rects[0]:
+                if checked_beg:
+                    opt_text_string = 'Beginner    \u2713'
+                else:
+                    opt_text_string = 'Beginner'
+            elif opt_rect == diff_opt_rects[1]:
+                if checked_int:
+                    opt_text_string = 'Intermediate    \u2713'
+                else:
+                    opt_text_string = 'Intermediate'
+            elif opt_rect == diff_opt_rects[2]:
+                if checked_exp:
+                    opt_text_string = 'Expert    \u2713'
+                else:
+                    opt_text_string = 'Expert'
+            else:
+                if checked_cstm:
+                    opt_text_string = 'Custom    \u2713'
+                else:
+                    opt_text_string = 'Custom'
+                    
+            dd_font = pygame.font.SysFont('segoeuisymbol', 14)
+            dd_text = dd_font.render(opt_text_string, True, (0, 0, 0), dd_rect_color)
+            dd_text_rect = dd_text.get_rect(left=opt_rect.left, top=opt_rect.top)
+            self.screen.blit(dd_text, dd_text_rect)
+            self.dropdown_menu_shown = True
+    
+    def hide_dropdown_menu(self):
+        top = self.window.gui.head_rect.top - 20
+        height = self.window.gui.head_rect.height + 30
+        need_to_clear_rect = pygame.Rect(0, top, self.screen.get_rect().width, height)
+        self.screen.fill(self.settings.bg_color, need_to_clear_rect)
+        # Draw gui rects and lines.
+        redraw_rects = list(self.gui_rects)
+        redraw_rects.remove(self.gui_rects[0])
+        self.window.gui.draw_rects(redraw_rects)
+        self.window.gui.draw_lines()
+        # Write mines left.
+        self.window.gui.show_mines_left(self.mines_left)
+        # Show proper time on timer.
+        self.window.gui.show_time(self.time_left)
+        
+        self.dropdown_menu_shown = False
+    
     def prep_new_game(self):
         """Resetup everything."""
         groups = [self.mines, self.overlays, self.marked_boxes, 
@@ -181,9 +291,6 @@ class Minesweeper:
         # Reset flags.
         self.active = True
         self.timer_active = False
-        
-        # Fill window screen with color.
-        self.window.fill_bg()
         
         # Draw gui rects and lines.
         self.window.gui.draw_rects(self.gui_rects)
@@ -212,6 +319,8 @@ class Minesweeper:
         
         # Prepare unclick event for restart_button.
         self.unclick_event = pygame.USEREVENT + 2
+        
+        
     
     def run_game(self):
         """Start the main loop for the game."""
@@ -244,6 +353,10 @@ class Minesweeper:
                     if self.window.gui.restart_button.rect.collidepoint(mouse_pos) and button_clicked[0]:
                         self.window.gui.restart_button.click()
                         pygame.time.set_timer(self.unclick_event, 250, loops=1)
+                        
+                    diff_rect = self.window.gui.diff_rect
+                    if button_clicked[0] and diff_rect.collidepoint(mouse_pos) and not self.dropdown_menu_shown:
+                        self.show_dropdown_window(self.checked_beg, self.checked_int, self.checked_exp)
                             
                 elif event.type == self.timer_event:
                     self.add_time()
@@ -251,8 +364,17 @@ class Minesweeper:
                     pygame.time.set_timer(self.timer_event, 0)
                     self.prep_new_game()
             
+                elif event.type == pygame.MOUSEMOTION:
+                    mouse_pos = pygame.mouse.get_pos()
+                    self.highlight_menu_button(mouse_pos)
+                    if self.dropdown_menu_shown and not self.diff_highlighted:
+                        self.hide_dropdown_menu()
+            
             # Make the most recently drawn screen visible.
             pygame.display.flip()
+            
+            # Limit game's fps
+            self.clock.tick(20)
             
 if __name__ == '__main__':
     # Make the game instance and run the game.

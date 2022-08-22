@@ -166,14 +166,12 @@ class Box(Rect):
             '8': black_color,
         }
         
-        font = pygame.font.Font(None, 39)
-        font.bold = True
+        font = pygame.font.SysFont('tahoma', 24, bold=True)
         
         text_color = color_dict[f'{str(self.adjacent_mines)}']
         text = font.render(str(self.adjacent_mines), True, text_color, (self.settings.bg_color))
         text_rect = text.get_rect()
         text_rect.center = self.center
-        text_rect.x += 1
-        text_rect.y += 2
+        text_rect.y -= 1
     
         return text, text_rect
