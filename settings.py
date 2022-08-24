@@ -1,6 +1,6 @@
 class Settings:
     """ Class to store all settings for Minesweeper."""
-    def __init__(self):
+    def __init__(self, diff='beginner'):
         """Initialize the game's settings"""
         # Screen settings
         self.thickness_of_edges = 21
@@ -13,9 +13,21 @@ class Settings:
         self.box_height = self.box_width
         
         # Mine field settings
-        self.columns = 9
-        self.rows = 9
-        self.mines = 10
+        self.difficulty = diff
+        if self.difficulty == 'beginner':
+            self.columns = 9
+            self.rows = 9
+            self.mines = 10
+        
+        elif self.difficulty == 'intermediate':
+            self.columns = 16
+            self.rows = 16
+            self.mines = 40
+            
+        elif self.difficulty == 'expert':
+            self.columns = 30
+            self.rows = 16
+            self.mines = 99
         
         # Menu bar settings
         self.menu_height = 20

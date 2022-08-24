@@ -2,16 +2,19 @@ import pygame
 
 from base_window import BaseWindow
 from body_grid import Grid
+from draw_lines_around_rect import draw_lines_around_rect as rect_lines
 from settings import Settings
 
 class Minesweeper:
     """The main class managing game assets and behaviour."""
     
-    def __init__(self):
+    def __init__(self, first_init=True):
         """Initialize the game and create game resources."""
-        pygame.init()
+        if first_init:
+            pygame.init()
+            
+            self.settings = Settings()
         
-        self.settings = Settings()
         self.window = BaseWindow(self)
         self.screen = self.window.screen
         
@@ -42,9 +45,11 @@ class Minesweeper:
         self.diff_highlighted = False
         self.sb_highlighted = False
         self.dropdown_menu_shown = False
+        self.highlighted_dropdown_button = []
         self.checked_beg = True
         self.checked_int = False
         self.checked_exp = False
+        self.checked_cstm = False
         
         # Clock for limiting game's fps.
         self.clock = pygame.time.Clock()
@@ -210,7 +215,12 @@ class Minesweeper:
                 self.window.gui.show_menu_buttons(scoreboard=True)
         
         elif not rects[0].collidepoint(mouse_pos) and not rects[1].collidepoint(mouse_pos):
-            if self.diff_highlighted and not self.window.gui.dropdown_rect.collidepoint(mouse_pos):
+            if self.dropdown_menu_shown:
+                if not self.window.gui.dropdown_rect.collidepoint(mouse_pos):
+                    self.diff_highlighted = False
+                    self.window.gui.show_menu_buttons(difficulty=True)
+                
+            elif self.diff_highlighted:
                 self.diff_highlighted = False
                 self.window.gui.show_menu_buttons(difficulty=True)
                 
@@ -218,51 +228,121 @@ class Minesweeper:
                 self.sb_highlighted = False
                 self.window.gui.show_menu_buttons(scoreboard=True)
     
-    def show_dropdown_window(self, checked_beg=False, checked_int=False, checked_exp=False, checked_cstm=False):
-        """Show dropdown window of difficulty menu."""
+    def create_dropdown_window(self):
+        """Create dropdown window of difficulty menu. It needs to be called by 
+        method which will display it on screen."""
         dd_rect = self.window.gui.dropdown_rect
-        dd_rect_color = self.window.gui.dropdown_rect_color
-        # Fill dd_rect with color
-        self.screen.fill(dd_rect_color, dd_rect)
         
         # Create rects for individual difficulty option.
-        diff_opt_rects = []
+        self.diff_opt_rects = []
         num_of_options = 4
         for num in range(1, num_of_options+1):
             rect_left = dd_rect.left
-            rect_top = dd_rect.top * num
+            rect_top = (dd_rect.top + 2) * num
             rect_width = dd_rect.width
             rect_height = dd_rect.height / num_of_options
             rect = pygame.Rect(rect_left, rect_top, rect_width, rect_height)
-            diff_opt_rects.append(rect)
+            self.diff_opt_rects.append(rect)
         
-        for opt_rect in diff_opt_rects:
-            if opt_rect == diff_opt_rects[0]:
-                if checked_beg:
+        button_tuples = []      # list of tuples consisting of rect and its text string
+        checked_button = self.settings.difficulty
+        for opt_rect in self.diff_opt_rects:
+            if opt_rect == self.diff_opt_rects[0]:
+                if checked_button == 'beginner':
                     opt_text_string = 'Beginner    \u2713'
                 else:
                     opt_text_string = 'Beginner'
-            elif opt_rect == diff_opt_rects[1]:
-                if checked_int:
+            elif opt_rect == self.diff_opt_rects[1]:
+                if checked_button == 'intermediate':
                     opt_text_string = 'Intermediate    \u2713'
                 else:
                     opt_text_string = 'Intermediate'
-            elif opt_rect == diff_opt_rects[2]:
-                if checked_exp:
+            elif opt_rect == self.diff_opt_rects[2]:
+                if checked_button == 'expert':
                     opt_text_string = 'Expert    \u2713'
                 else:
                     opt_text_string = 'Expert'
             else:
-                if checked_cstm:
+                if checked_button == 'custom':
                     opt_text_string = 'Custom    \u2713'
                 else:
                     opt_text_string = 'Custom'
-                    
-            dd_font = pygame.font.SysFont('segoeuisymbol', 14)
-            dd_text = dd_font.render(opt_text_string, True, (0, 0, 0), dd_rect_color)
-            dd_text_rect = dd_text.get_rect(left=opt_rect.left, top=opt_rect.top)
-            self.screen.blit(dd_text, dd_text_rect)
+            
+            button_tuples.append((opt_rect, opt_text_string))
+        return button_tuples
+    
+    def show_dropdown_window(self, button_tuples, just_button=False, highlight=False):
+        """Calls create_dropdown_window method and displays dropdown window on
+        screen. It takes as argument button tuples of rects and its texts."""
+        dd_rect = self.window.gui.dropdown_rect
+        dd_rect_color = self.window.gui.dropdown_rect_color
+        
+        if not just_button:
+            # Fill dd_rect with color
+            self.screen.fill(dd_rect_color, dd_rect)
             self.dropdown_menu_shown = True
+            
+        if highlight:
+            button_color = (0, 0, 150)
+            text_color = (255, 255, 255)
+        else:
+            button_color = dd_rect_color
+            text_color = (0, 0, 0)
+        
+        # button_tuples contains four tuples.
+        if len(button_tuples) != 2:
+            for button in button_tuples:
+                self.screen.fill(button_color, button[0])
+                dd_font = pygame.font.SysFont('segoeuisymbol', 14)
+                dd_text = dd_font.render(button[1], True, text_color, button_color)
+                dd_text_rect = dd_text.get_rect(left=button[0].left+10, top=button[0].top)
+                self.screen.blit(dd_text, dd_text_rect)
+        # button_tuples contains just one tuple, so without this code index references
+        # would be messed up.
+        else:
+            self.screen.fill(button_color, button_tuples[0])
+            dd_font = pygame.font.SysFont('segoeuisymbol', 14)
+            dd_text = dd_font.render(button_tuples[1], True, text_color, button_color)
+            dd_text_rect = dd_text.get_rect(left=button_tuples[0].left+10, top=button_tuples[0].top)
+            self.screen.blit(dd_text, dd_text_rect)
+            
+        rect_lines(self, dd_rect, self.screen, thickness=1, inside=True, singlecolored='black')
+    
+    def highlight_dropdown_buttons(self, mouse_pos):
+        """Highlight buttons in dropdown window if hovering over them."""
+        if self.dropdown_menu_shown:
+            button_tuples = self.create_dropdown_window()
+            
+            for one in button_tuples:
+                if one[0].collidepoint(mouse_pos) and one not in self.highlighted_dropdown_button:
+                    self.show_dropdown_window(one, just_button=True, highlight=True)
+                    self.highlighted_dropdown_button.append(one)
+                
+                elif not one[0].collidepoint(mouse_pos) and one in self.highlighted_dropdown_button:
+                    self.show_dropdown_window(one, just_button=True)
+                    self.highlighted_dropdown_button.remove(one)
+    
+    def change_difficulty(self, mouse_pos):
+        """When clicked on one of difficulty buttons in dropdown window, 
+        recreate game window according to newly set difficulty."""
+        rects = self.diff_opt_rects
+        new_difficulty = None
+        if rects[0].collidepoint(mouse_pos):
+            # Beginner difficulty is chosen.
+            new_difficulty = 'beginner'
+        elif rects[1].collidepoint(mouse_pos):
+            # Intermediate difficulty is chosen.
+            new_difficulty = 'intermediate'
+        elif rects[2].collidepoint(mouse_pos):
+            # Expert difficulty is chosen
+            new_difficulty = 'expert'
+        
+        if new_difficulty != None and self.settings.difficulty != new_difficulty:
+            # difficulty is going to be changed
+            self.settings = Settings(diff=new_difficulty)
+            pygame.time.set_timer(self.timer_event, 0)
+            self.__init__(first_init=False)
+            self.prep_new_game()
     
     def hide_dropdown_menu(self):
         top = self.window.gui.head_rect.top - 20
@@ -356,7 +436,10 @@ class Minesweeper:
                         
                     diff_rect = self.window.gui.diff_rect
                     if button_clicked[0] and diff_rect.collidepoint(mouse_pos) and not self.dropdown_menu_shown:
-                        self.show_dropdown_window(self.checked_beg, self.checked_int, self.checked_exp)
+                        button_tuples = self.create_dropdown_window()
+                        self.show_dropdown_window(button_tuples)
+                    elif button_clicked[0] and self.dropdown_menu_shown:
+                        self.change_difficulty(mouse_pos)
                             
                 elif event.type == self.timer_event:
                     self.add_time()
@@ -367,7 +450,10 @@ class Minesweeper:
                 elif event.type == pygame.MOUSEMOTION:
                     mouse_pos = pygame.mouse.get_pos()
                     self.highlight_menu_button(mouse_pos)
-                    if self.dropdown_menu_shown and not self.diff_highlighted:
+                    if self.dropdown_menu_shown and self.diff_highlighted:
+                        self.highlight_dropdown_buttons(mouse_pos)
+                        
+                    elif self.dropdown_menu_shown and not self.diff_highlighted:
                         self.hide_dropdown_menu()
             
             # Make the most recently drawn screen visible.

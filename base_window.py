@@ -11,7 +11,10 @@ class BaseWindow:
         self.mines_game = mines_game
         self.settings = mines_game.settings
         
-        # Create game window
+        self.create_game_window()
+    
+    def create_game_window(self):
+        """Create game window"""
         window_width = ((self.settings.box_width * self.settings.columns) +
             (self.settings.thickness_of_edges * 2))
         window_height = ((self.settings.box_height * (self.settings.rows + 3)) +
@@ -65,7 +68,7 @@ class Gui:
         # Create dropdown menu rect.
         dropdown_left = self.menu_bar_rect.left
         dropdown_top = self.menu_bar_rect.bottom
-        dropdown_width = 100
+        dropdown_width = 115
         dropdown_height = 3 * self.settings.box_height
         self.dropdown_rect = pygame.Rect(dropdown_left, dropdown_top,
             dropdown_width, dropdown_height)
@@ -87,8 +90,7 @@ class Gui:
         self.mines_left_rect = pygame.Rect(
             self.head_rect.left + 7,
             self.head_rect.top + 7,
-            self.head_rect.width // 3,
-            self.head_rect.height - 14)
+            90, 46)
         self.mines_left_rect_color = (0, 0, 0)
         
         # Rect containing everything besides menu bar.
