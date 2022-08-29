@@ -68,11 +68,20 @@ class Gui:
         # Create dropdown menu rect.
         dropdown_left = self.menu_bar_rect.left
         dropdown_top = self.menu_bar_rect.bottom
-        dropdown_width = 115
+        dropdown_width = 120
         dropdown_height = 3 * self.settings.box_height
         self.dropdown_rect = pygame.Rect(dropdown_left, dropdown_top,
             dropdown_width, dropdown_height)
         self.dropdown_rect_color = self.settings.menu_color
+        
+        # Create custom diff menu rect.
+        custom_left = self.dropdown_rect.right
+        custom_top = dropdown_top
+        custom_width = 110
+        custom_height = dropdown_height
+        self.custom_rect = pygame.Rect(custom_left, custom_top, custom_width,
+            custom_height)
+        self.custom_rect_color = self.settings.menu_color
         
         # Create head rects.
         hr_width = br_width

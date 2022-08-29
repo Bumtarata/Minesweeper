@@ -29,6 +29,12 @@ class Settings:
             self.rows = 16
             self.mines = 99
         
+        # Those Nones are just placeholders, numbers will be provided by user.
+        elif self.difficulty == 'custom':
+            self.columns = None
+            self.rows = None
+            self.mines = None
+        
         # Menu bar settings
         self.menu_height = 20
         self.menu_color = (170, 170, 170)
