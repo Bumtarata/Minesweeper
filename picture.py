@@ -10,11 +10,11 @@ class Picture(pygame.sprite.Sprite):
         self.settings = mines_game.settings
         
         if picture_type == 'mine':
-            self.unscaled_img = pygame.image.load('imgs/mine.bmp')
+            self.unscaled_img = pygame.image.load('./imgs/mine.bmp')
             box_height = self.settings.box_height
             num = 8
         elif picture_type == 'marked_mine':
-            self.unscaled_img = pygame.image.load('imgs/marked_mine.bmp')
+            self.unscaled_img = pygame.image.load('./imgs/marked_mine.bmp')
             box_height = self.settings.box_height
             num = 15
         elif picture_type == 'default_smile' or picture_type == 'win_smile' or picture_type == 'dead_smile':
@@ -24,13 +24,13 @@ class Picture(pygame.sprite.Sprite):
                 num = 12
             
             if picture_type == 'default_smile':
-                self.unscaled_img = pygame.image.load('imgs/default_smile.png')
+                self.unscaled_img = pygame.image.load('./imgs/default_smile.png')
                 box_height = mines_game.window.gui.restart_button.rect.height
             elif picture_type == 'win_smile':
-                self.unscaled_img = pygame.image.load('imgs/win_smile.png')
+                self.unscaled_img = pygame.image.load('./imgs/win_smile.png')
                 box_height = mines_game.window.gui.restart_button.rect.height
             elif picture_type == 'dead_smile':
-                self.unscaled_img = pygame.image.load('imgs/dead_smile.png')
+                self.unscaled_img = pygame.image.load('./imgs/dead_smile.png')
                 box_height = mines_game.window.gui.restart_button.rect.height
         
         self.image = self._scale_img(self.unscaled_img, box_height, num)
