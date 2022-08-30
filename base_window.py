@@ -10,8 +10,13 @@ class BaseWindow:
         """Initialize game window."""
         self.mines_game = mines_game
         self.settings = mines_game.settings
-        
+        self.set_window_icon()
         self.create_game_window()
+    
+    def set_window_icon(self):
+        icon_file = './imgs/icon_mine.bmp'
+        image = pygame.image.load(icon_file)
+        pygame.display.set_icon(image)
     
     def create_game_window(self):
         """Create game window"""
