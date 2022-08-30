@@ -5,7 +5,7 @@ import pygame
 from box import Box
 
 class Grid():
-    """Class for grid in body_rect. This is the main part of the game."""
+    """Class for grid in body_rect where the actual game takes place."""
     def __init__(self, mines_game):
         """Initialize all that's necessary."""
         self.body_rect = mines_game.body_rect
@@ -57,8 +57,9 @@ class Grid():
                 random_row = choice(field_of_boxes)
                 random_box = choice(random_row)
                 
-                if random_box.has_mine:
-                    # Box already has a mine, pick another one.
+                if random_box.has_mine or random_box == field_of_boxes[0][0]:
+                    # Box already has a mine or it is first box in first row;
+                    # pick another one.
                     continue
                 else:
                     # Box doesn't have mine, so place one there.
@@ -76,7 +77,7 @@ class Grid():
                 box.count_adjacent_mines()
                 
     def uncover_left_boxes(self, field_of_boxes):
-        """Uncover all boxes that weren't uncovered yet,"""
+        """Uncover all boxes that weren't uncovered yet."""
         for row in field_of_boxes:
             for box in row:
                 if box.covered and not box.marked :

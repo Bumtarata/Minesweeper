@@ -21,7 +21,7 @@ class Minesweeper:
         # Fill window screen with color.
         self.window.fill_bg()
         
-        # Create gui rects.
+        # Create main gui rects.
         self.gui_rects = self.window.gui.create_gui_rects()
         self.body_rect = self.gui_rects[0][0]
         
@@ -38,10 +38,11 @@ class Minesweeper:
         
         # Game flags and other attributes.
         self.running = True
-        self.active = True
+        self.active = True              # tells if user can uncover other boxes
         self.timer_active = False
         self.mines_left = self.settings.mines
-        self.time_left = 0
+        self.time_left = 0              # count's time since first click to body_rect
+        # flags for menu bar, difficulty menu and so on
         self.diff_highlighted = False
         self.sb_highlighted = False
         self.dropdown_menu_shown = False
@@ -78,6 +79,8 @@ class Minesweeper:
                 self.timer_active = False
                 self.window.gui.restart_button.draw_button('dead_smile')
             
+            # clicked box doesn't have adjacent mines; uncover all connected
+            # boxes without adjacent mines
             elif not clicked_box.adjacent_mines:
                 
                 while True:
@@ -105,6 +108,8 @@ class Minesweeper:
                 
     
     def show_wrnogly_marked_boxes(self):
+        """If clicked on box with mine, highlight boxes wrongly marked as boxes
+        with mines."""
         wrongly_marked_boxes = []
         pink = (255, 150, 150)
         for row in self.field_of_boxes:
@@ -158,7 +163,9 @@ class Minesweeper:
             self.window.gui.show_mines_left(self.mines_left)
             
     def check_winning(self):
-        """Check if winning conditions were met."""
+        """Check if winning conditions were met. That means either all mines were
+        marked correctly or only uncovered boxes that are left are boxes with
+        mines."""
         win = False
         if self.mines_left == 0:
             correct_marked_boxes = []
@@ -284,8 +291,8 @@ class Minesweeper:
         return button_tuples
     
     def show_dropdown_window(self, button_tuples, just_button=False, highlight=False):
-        """Calls create_dropdown_window method and displays dropdown window on
-        screen. It takes as argument button tuples of rects and its texts."""
+        """Displays dropdown window on screen. It takes as argument button tuples
+        of rects and its texts."""
         dd_rect = self.window.gui.dropdown_rect
         dd_rect_color = self.window.gui.dropdown_rect_color
         
@@ -308,8 +315,8 @@ class Minesweeper:
                 dd_text = dd_font.render(button[1], True, text_color, button_color)
                 dd_text_rect = dd_text.get_rect(left=button[0].left+10, top=button[0].top)
                 self.screen.blit(dd_text, dd_text_rect)
-        # button_tuples contains just one tuple, so without this code index references
-        # would be messed up.
+        # button_tuples contains just one tuple, so without this code below index
+        # references would be messed up.
         else:
             self.screen.fill(button_color, button_tuples[0])
             dd_font = pygame.font.SysFont('segoeuisymbol', 14)
@@ -394,6 +401,7 @@ class Minesweeper:
             num_top = rect.top + ((rect.height - num_height) / 2)
             num_rect = pygame.Rect(num_left, num_top, num_width, num_height)
             
+            # create ok button (it has different size than the other rects
             if a == 3:
                 width = rect.width - 40
                 correct_rect = pygame.Rect(left, top, width, height)
@@ -402,6 +410,8 @@ class Minesweeper:
             else:
                 custom_setting_rects.append((rect, num_rect))
         
+        # create tuples of base rect, its text and rect into which users will
+        # be able to write.
         for rect in list(custom_setting_rects):
             if rect == custom_setting_rects[0]:
                 custom_setting_rects[0] = (custom_setting_rects[0][0], 'Columns: ',
@@ -417,6 +427,8 @@ class Minesweeper:
         return custom_setting_rects # elements of list are tuples of rect and text
         
     def show_custom_diff_window(self, ok_highlighted=False, just_ok=False):
+        """Self explanatory name of method. just_ok means, that only ok button
+        will be redrawn."""
         self.custom_tuples = self.create_custom_diff_window()
         self.ok_tuple = self.custom_tuples[-1]
         custom_rect = self.window.gui.custom_rect
@@ -452,7 +464,9 @@ class Minesweeper:
         rect_lines(self, custom_rect, self.screen, thickness=1, inside=True, singlecolored='black')
     
     def write_to_custom_diff_window(self, event, active=True):
-        """Write into columns, rows and mines options in custom diff window."""
+        """Write into columns, rows and mines options in custom diff window.
+        User needs to click to rect, then write numbers and then confirm by 
+        hitting enter"""
         deactivate_rect = False
         if active:
             color = (255, 255, 255)
@@ -485,7 +499,7 @@ class Minesweeper:
                 except:
                     pass
         
-        # highlight the writing rect
+        # highlight box for writing
         self.screen.fill(color, self.active_rect)
         
         if len(self.input_text) > 0:
@@ -500,6 +514,7 @@ class Minesweeper:
             print(self.custom_settings)
         
     def hide_dropdown_window(self):
+        """Another self explanatory name of method."""
         top = self.window.gui.head_rect.top - 20
         height = self.window.gui.head_rect.height + 30
         need_to_clear_rect = pygame.Rect(0, top, self.screen.get_rect().width, height)
@@ -585,12 +600,14 @@ class Minesweeper:
                                 self.mark_mine(mouse_pos)
                                 
                             self.check_winning()
-                        
+                    
+                    # restart button clicked
                     if (self.window.gui.restart_button.rect.collidepoint(mouse_pos)
                         and button_clicked[0] and not self.custom_menu_shown):
                         self.window.gui.restart_button.click()
                         pygame.time.set_timer(self.unclick_event, 250, loops=1)
-                        
+                    
+                    # events for handeling menu bar and changing difficulty
                     diff_rect = self.window.gui.diff_rect
                     if button_clicked[0] and diff_rect.collidepoint(mouse_pos) and not self.dropdown_menu_shown:
                         button_tuples = self.create_dropdown_window()
@@ -611,13 +628,17 @@ class Minesweeper:
                                 dict_values = self.custom_settings.values()
                                 if None not in dict_values:
                                     self.change_difficulty(mouse_pos)
-                            
+                
+                # timer
                 elif event.type == self.timer_event:
                     self.add_time()
+                # event handeling that simple animation when clicking on
+                # restart button
                 elif event.type == self.unclick_event:
                     pygame.time.set_timer(self.timer_event, 0)
                     self.prep_new_game()
             
+                # mainly events for highlighting rects in menu bar
                 elif event.type == pygame.MOUSEMOTION:
                     mouse_pos = pygame.mouse.get_pos()
                     self.highlight_menu_button(mouse_pos)
@@ -637,6 +658,7 @@ class Minesweeper:
                     elif self.dropdown_menu_shown and not self.diff_highlighted:
                         self.hide_dropdown_window()
                 
+                # event for checking for writing in custom difficulty settings
                 if self.active_rect != None and (event.type==pygame.KEYDOWN or event.type==pygame.MOUSEBUTTONDOWN):
                     self.write_to_custom_diff_window(event)
             

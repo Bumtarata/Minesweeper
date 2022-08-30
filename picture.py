@@ -1,7 +1,8 @@
 import pygame
 
 class Picture(pygame.sprite.Sprite):
-    """Class representing single mine."""
+    """Class representing single picture (used for mines and
+    emoticons on restart button."""
     def __init__(self, mines_game, picture_type='mine', clicked=False):
         """Initialize picture Picture type must be one of these: mine, 
         marked_mine, default_smile, win_smile, dead_smile!!!"""

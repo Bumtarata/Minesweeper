@@ -28,7 +28,6 @@ class RestartButton():
         rect_lines(self.game, self.rect, self.screen, thickness=5, inside=True, invert=True)    # lines inside the rect
         rect_lines(self.game, self.rect, self.screen, thickness=2, singlecolored='grey')    # grey lines outside the rect
 
-        
         group = self.game.restart_button_group
         img = Picture(self.game, picture_type=img_type)
         img.rect.center = self.rect.center

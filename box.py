@@ -81,7 +81,7 @@ class Box(Rect):
         
         
     def draw_border_lines(self, surface):
-        """Draw thin lines around given rect."""
+        """Draw thin lines around self."""
         topright_vertice = self.topright[0] - 1, self.topright[1]
         topleft_vertice = self.topleft
         bottomleft_vertice = self.bottomleft[0], self.bottomleft[1] - 1
@@ -123,7 +123,7 @@ class Box(Rect):
                                 [row_of_int[box_idx-1], row_of_int[box_idx+1]])
                     
                     else:
-                        # Check whether the box is in the first of last column.
+                        # Check whether the box is in the first or last column.
                         if box_idx == 0:
                             boxes_of_interest.extend(row_of_int[box_idx:box_idx+2])
                         elif box_idx + 1 == self.settings.columns:
