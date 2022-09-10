@@ -368,7 +368,7 @@ class Minesweeper:
             # Custom difficulty is chosen.
             new_difficulty = 'custom'
         
-        if new_difficulty != None and self.settings.difficulty != new_difficulty:
+        if new_difficulty != None and (self.settings.difficulty != new_difficulty or self.settings.difficulty == 'custom'):
             # difficulty is going to be changed
             self.settings = Settings(diff=new_difficulty)
             if new_difficulty == 'custom':
