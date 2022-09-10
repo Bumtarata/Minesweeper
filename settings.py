@@ -13,6 +13,12 @@ class Settings:
         self.box_height = self.box_width
         
         # Mine field settings
+        self.max_columns = 60   # Be careful about raising max numbers, app might get really
+        self.min_columns = 9    # slow or even stop responding. Also it might not fit inside
+        self.max_rows = 30      # your screen.
+        self.min_rows = 9
+        self.max_ratio = 8.1 # number of boxes (columns*rows) / number of mines
+        
         self.difficulty = diff
         if self.difficulty == 'beginner':
             self.columns = 9
