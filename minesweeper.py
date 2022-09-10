@@ -498,11 +498,35 @@ class Minesweeper:
                     written_number = int(self.input_text)
                     
                     if self.active_rect == self.custom_tuples[0][-1]:
-                        self.custom_settings['columns'] = written_number if written_number > 8 else 9
+                        if written_number < self.settings.min_columns:
+                            written_number = self.settings.min_columns
+                        elif written_number > self.settings.max_columns:
+                            written_number = self.settings.max_columns
+                        self.custom_settings['columns'] = written_number
+                        written_setting = 'columns'
+                    
                     elif self.active_rect == self.custom_tuples[1][-1]:
-                        self.custom_settings['rows'] = written_number if written_number > 8 else 9
+                        if written_number < self.settings.min_rows:
+                            written_number = self.settings.min_rows
+                        elif written_number > self.settings.max_rows:
+                            written_number = self.settings.max_rows
+                        self.custom_settings['rows'] = written_number
+                        written_setting = 'rows'
+                    
                     else:
-                        self.custom_settings['mines'] = written_number if written_number > 9 else 10
+                        try:
+                            size = self.custom_settings['columns'] * self.custom_settings['rows']
+                            ratio = size / written_number
+                            if ratio > self.settings.max_ratio:
+                                if size % self.settings.max_ratio == 0:
+                                    written_number = size / self.settings.max_ratio
+                                else:
+                                    written_number = int(size / self.settings.max_ratio) + 1
+                            self.custom_settings['mines'] = written_number
+                            written_setting = 'mines'
+                        except TypeError:
+                        # Either columns or rows were not filled.
+                            active = False
                 
                 color = self.settings.menu_color
                 deactivate_rect = True
@@ -514,9 +538,15 @@ class Minesweeper:
             else:
                 try:
                     num = int(event.unicode)
-                    if len(self.input_text) <= 2:
-                        self.input_text += event.unicode
-                except:
+                    # mines rect can contain 3 characters, columns and rows only 2 characters
+                    if self.active_rect == self.custom_tuples[2][-1]:
+                        max_chars = 3
+                    else:
+                        max_chars = 2
+                    if len(self.input_text)+1 <= max_chars:
+                            self.input_text += event.unicode
+                except ValueError:
+                # pressed key is not number
                     pass
         
         # highlight box for writing
@@ -526,8 +556,11 @@ class Minesweeper:
         # proper rects. If user clicks to writing rect, it will become white 
         # and blank
         going_to_write = False
-        if len(self.input_text) > 0 and (active or return_clicked):
+        if len(self.input_text) > 0 and active and not return_clicked:
             text = self.input_text
+            going_to_write = True
+        elif active and return_clicked:
+            text = str(self.custom_settings[written_setting])
             going_to_write = True
         elif not active:
             if self.active_rect == self.custom_tuples[0][-1] and self.custom_settings['columns']:
