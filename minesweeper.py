@@ -12,8 +12,8 @@ class Minesweeper:
         """Initialize the game and create game resources."""
         if first_init:
             pygame.init()
-            
             self.settings = Settings()
+            self.custom_settings = {'columns': None, 'rows': None, 'mines': None}
         
         self.window = BaseWindow(self)
         self.screen = self.window.screen
@@ -50,7 +50,6 @@ class Minesweeper:
         self.custom_menu_shown = False
         self.active_rect = None
         self.input_text = ''
-        self.custom_settings = {'columns': None, 'rows': None, 'mines': None}
         self.ok_button_highlighted = False
         self.checked_beg = True
         self.checked_int = False
@@ -283,9 +282,9 @@ class Minesweeper:
                     opt_text_string = 'Expert'
             elif opt_rect == self.diff_opt_rects[3]:
                 if checked_button == 'custom':
-                    opt_text_string = 'Custom    \u2713'
+                    opt_text_string = 'Custom    \u2713      >'
                 else:
-                    opt_text_string = 'Custom'
+                    opt_text_string = 'Custom            >'
             
             button_tuples.append((opt_rect, opt_text_string))
         return button_tuples
@@ -445,6 +444,7 @@ class Minesweeper:
             # Fill custom_rect with custom_rect_color
             self.screen.fill(custom_rect_color, custom_rect)
             
+            current_settings = [self.settings.columns, self.settings.rows, self.settings.mines]
             for element in self.custom_tuples:
                 text = font.render(element[1], True, text_color, custom_rect_color)
                 text_rect = text.get_rect(left=element[0].left+10, top=element[0].top)
@@ -453,6 +453,24 @@ class Minesweeper:
                 self.screen.blit(text, text_rect)
                 
                 if element != self.custom_tuples[-1]:
+                # show numbers of columns, rows and mines if they were set   
+                    going_to_write = False
+                    numfont = pygame.font.SysFont(self.settings.menu_font_type,
+                        element[-1].height-4, bold=True)
+                    if element == self.custom_tuples[0] and self.custom_settings['columns']:
+                        text_surf = numfont.render(str(self.custom_settings['columns']), True, (0, 0, 0))
+                        going_to_write = True
+                    elif element == self.custom_tuples[1] and self.custom_settings['rows']:
+                        text_surf = numfont.render(str(self.custom_settings['rows']), True, (0, 0, 0))
+                        going_to_write = True
+                    elif element == self.custom_tuples[2] and self.custom_settings['mines']:
+                        text_surf = numfont.render(str(self.custom_settings['mines']), True, (0, 0, 0))
+                        going_to_write = True
+                    if going_to_write:
+                        text_rect = text_surf.get_rect(center=element[-1].center)
+                        self.screen.blit(text_surf, text_rect)
+                    
+                    # draw lines around rect where user can write custom settings
                     rect_lines(self, element[-1], self.screen, thickness=1,
                         singlecolored='black')
         else:
@@ -468,6 +486,7 @@ class Minesweeper:
         User needs to click to rect, then write numbers and then confirm by 
         hitting enter"""
         deactivate_rect = False
+        return_clicked = False
         if active:
             color = (255, 255, 255)
         else:
@@ -487,6 +506,7 @@ class Minesweeper:
                 
                 color = self.settings.menu_color
                 deactivate_rect = True
+                return_clicked = True
             
             elif event.key == pygame.K_BACKSPACE:
                 self.input_text = self.input_text[:-1]
@@ -502,16 +522,32 @@ class Minesweeper:
         # highlight box for writing
         self.screen.fill(color, self.active_rect)
         
-        if len(self.input_text) > 0:
+        # If self.custom_settings contains some filled numbers, show them in
+        # proper rects. If user clicks to writing rect, it will become white 
+        # and blank
+        going_to_write = False
+        if len(self.input_text) > 0 and (active or return_clicked):
+            text = self.input_text
+            going_to_write = True
+        elif not active:
+            if self.active_rect == self.custom_tuples[0][-1] and self.custom_settings['columns']:
+                text = str(self.custom_settings['columns'])
+                going_to_write = True
+            elif self.active_rect == self.custom_tuples[1][-1] and self.custom_settings['rows']:
+                text = str(self.custom_settings['rows'])
+                going_to_write = True
+            elif self.active_rect == self.custom_tuples[2][-1] and self.custom_settings['mines']:
+                text = str(self.custom_settings['mines'])
+                going_to_write = True
+            
+        if going_to_write:
             font = pygame.font.SysFont(self.settings.menu_font_type,
-                    self.active_rect.height-4, bold=True)
-                    
-            text_surf = font.render(self.input_text, True, (0, 0, 0))
+                self.active_rect.height-4, bold=True)
+            text_surf = font.render(text, True, (0, 0, 0))
             text_rect = text_surf.get_rect(center=self.active_rect.center)
             self.screen.blit(text_surf, text_rect)
         if deactivate_rect:
             self.active_rect = None
-            print(self.custom_settings)
         
     def hide_dropdown_window(self):
         """Another self explanatory name of method."""
