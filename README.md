@@ -45,7 +45,7 @@ I intend to add functionality for that.
 
 I created this project as learning exercise which should help me to 
 strengthen my newly acquired basic knowledge and skills in programming with
-Python. The code might not be entirely clear and well organised, however
+Python. The code might not be entirely clear and well organized, however
 when reading through it you should keep in mind that this is actually 
 very first project completely of my own so when I was writing it, my primary
 goal was for it to work properly even if it would look a bit messy. 
