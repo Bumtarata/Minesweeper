@@ -1,7 +1,6 @@
 import pygame
 
 from draw_lines_around_rect import draw_lines_around_rect as rect_lines
-from picture import Picture
 from restart_button import RestartButton
 
 class BaseWindow:
@@ -70,7 +69,7 @@ class Gui:
         self.menu_bar_rect_color = self.settings.menu_color
         self.screen.fill(self.menu_bar_rect_color, self.menu_bar_rect)
         
-        # Create dropdown menu rect.
+        # Create difficulty dropdown menu rect.
         dropdown_left = self.menu_bar_rect.left
         dropdown_top = self.menu_bar_rect.bottom
         dropdown_width = 120
@@ -78,6 +77,15 @@ class Gui:
         self.dropdown_rect = pygame.Rect(dropdown_left, dropdown_top,
             dropdown_width, dropdown_height)
         self.dropdown_rect_color = self.settings.menu_color
+        
+        # Create highscores dropdown menu rect.
+        sb_dropdown_left = self.menu_bar_rect.left + 81
+        sb_dropdown_top = self.dropdown_rect.top
+        sb_dropdown_height = int(self.dropdown_rect.height / 4 * 3)
+        sb_dropdown_width = 150
+        self.sb_dropdown_rect = pygame.Rect(sb_dropdown_left, sb_dropdown_top,
+            sb_dropdown_width, sb_dropdown_height)
+        self.sb_dropdown_rect_color = self.settings.menu_color
         
         # Create custom diff menu rect.
         custom_left = self.dropdown_rect.right
@@ -107,17 +115,18 @@ class Gui:
             90, 46)
         self.mines_left_rect_color = (0, 0, 0)
         
+        self.time_rect = pygame.Rect(self.mines_left_rect)
+        self.time_rect.right = self.head_rect.right - 7
+        self.time_rect.y = self.mines_left_rect.y
+        self.time_rect_color = self.mines_left_rect_color
+        
+        
         # Rect containing everything besides menu bar.
         big_left = 0
         big_top = self.menu_bar_rect.height
         big_width = self.screen_rect.width
         big_height = self.screen_rect.height - self.menu_bar_rect.height
         self.big_rect = pygame.Rect(big_left, big_top, big_width, big_height)
-        
-        self.time_rect = pygame.Rect(self.mines_left_rect)
-        self.time_rect.right = self.head_rect.right - 7
-        self.time_rect.y = self.mines_left_rect.y
-        self.time_rect_color = self.mines_left_rect_color
         
         # Return list of rects and its colors tuples.
         all_basic_gui_rects = [
@@ -128,14 +137,17 @@ class Gui:
         ]
         return all_basic_gui_rects
         
-    def draw_rects(self, all_rects):
+    def draw_rects(self, all_rects, smile=None):
         """Draw given rects with given color."""
         for one_rect in all_rects:
             self.screen.fill(one_rect[1], rect=one_rect[0])
         
         # Create and draw restart_button.
         self.restart_button = RestartButton(self.mines_game)
-        self.restart_button.draw_button()
+        if smile:
+            self.restart_button.draw_button(img_type=smile)
+        else:
+            self.restart_button.draw_button()
        
     def draw_lines(self):
         """Draw border lines."""
@@ -145,7 +157,7 @@ class Gui:
         rect_lines(self.mines_game, self.time_rect, self.screen, thickness=3)        # lines for time_rect
         rect_lines(self.mines_game, self.big_rect, self.screen, inside=True, invert=True)
         
-    def show_menu_buttons(self, difficulty=False, scoreboard=False, clicked=False):
+    def show_menu_buttons(self, difficulty=False, highscores=False, clicked=False):
         """Create menu buttons"""
         font = pygame.font.SysFont(self.settings.menu_font_type, 14, bold=True)
         if clicked:
@@ -155,7 +167,7 @@ class Gui:
             font_color = (0, 0, 0)
             rect_bg_color = self.settings.menu_color
         
-        # Difficulty button.
+        # Difficulty button
         if difficulty:
             diff_left = self.menu_bar_rect.left
             diff_top = self.menu_bar_rect.top
@@ -169,15 +181,15 @@ class Gui:
             diff_text_rect.y += 1
             self.screen.blit(diff_text, diff_text_rect)
         
-        # Scoreboard button.
-        if scoreboard:
+        # Highscores button
+        if highscores:
             sb_left = self.menu_bar_rect.left + 81
             sb_top = self.menu_bar_rect.top
             sb_width = 90
             sb_height = self.menu_bar_rect.height
             self.scoreboard_rect = pygame.Rect(sb_left, sb_top, sb_width, sb_height)
             self.screen.fill(rect_bg_color, self.scoreboard_rect)
-            sb_text = font.render('Scoreboard', True, font_color, rect_bg_color)
+            sb_text = font.render('Highscores', True, font_color, rect_bg_color)
             sb_text_rect = sb_text.get_rect()
             sb_text_rect.center = self.scoreboard_rect.center
             sb_text_rect.y += 1
