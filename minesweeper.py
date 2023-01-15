@@ -1,3 +1,5 @@
+import sqlite3
+
 import pygame
 
 from base_window import BaseWindow
@@ -14,6 +16,17 @@ class Minesweeper:
             pygame.init()
             self.settings = Settings()
             self.custom_settings = {'columns': None, 'rows': None, 'mines': None}
+            
+            # Create database for keeping high scores and create variable highscore
+            self.con = sqlite3.connect('highscore.sqlite3')
+            cur = self.con.cursor()
+            # create highscore table in database; error means it already exists
+            try:
+                cur.execute("CREATE TABLE highscore(difficulty, time)")
+            except sqlite3.OperationalError:
+                pass
+            self.highscore = self.get_high_score()  # dictionary (difficulty: time)
+            cur.close()
         
         self.window = BaseWindow(self)
         self.screen = self.window.screen
@@ -28,7 +41,7 @@ class Minesweeper:
         self.body_grid = Grid(self)
         
         # Draw menu buttons
-        self.window.gui.show_menu_buttons(difficulty=True, scoreboard=True)
+        self.window.gui.show_menu_buttons(difficulty=True, highscores=True)
         
         # Groups for sprites to be drawn.
         self.mines = pygame.sprite.Group()
@@ -41,25 +54,28 @@ class Minesweeper:
         self.active = True              # tells if user can uncover other boxes
         self.timer_active = False
         self.mines_left = self.settings.mines
-        self.time_left = 0              # count's time since first click to body_rect
+        self.time_left = 0              # counts time since first click to body_rect
+        
         # flags for menu bar, difficulty menu and so on
         self.diff_highlighted = False
         self.sb_highlighted = False
         self.dropdown_menu_shown = False
+        self.sb_dropdown_menu_shown = False
         self.highlighted_dropdown_button = []
         self.custom_menu_shown = False
         self.active_rect = None
         self.input_text = ''
         self.ok_button_highlighted = False
-        self.checked_beg = True
+        self.checked_beg = True         # which difficulty is currently selected
         self.checked_int = False
         self.checked_exp = False
         self.checked_cstm = False
+        self.dead_smile = False
+        self.win_smile = False
         
         # Clock for limiting game's fps.
         self.clock = pygame.time.Clock()
         
-    
     def _uncover_clicked_box(self, mouse_pos):
         """Uncover the box that has been clicked."""
         for row in self.field_of_boxes:
@@ -72,11 +88,12 @@ class Minesweeper:
             uncovering_boxes = [clicked_box]
             
             if clicked_box.has_mine:
-                self.show_wrnogly_marked_boxes()
+                self.show_wrongly_marked_boxes()
                 self.active = False
                 pygame.time.set_timer(self.timer_event, 0)
                 self.timer_active = False
                 self.window.gui.restart_button.draw_button('dead_smile')
+                self.dead_smile = True
             
             # clicked box doesn't have adjacent mines; uncover all connected
             # boxes without adjacent mines
@@ -106,7 +123,7 @@ class Minesweeper:
                 self.window.gui.show_mines_left(self.mines_left)
                 
     
-    def show_wrnogly_marked_boxes(self):
+    def show_wrongly_marked_boxes(self):
         """If clicked on box with mine, highlight boxes wrongly marked as boxes
         with mines."""
         wrongly_marked_boxes = []
@@ -162,9 +179,9 @@ class Minesweeper:
             self.window.gui.show_mines_left(self.mines_left)
             
     def check_winning(self):
-        """Check if winning conditions were met. That means either all mines were
-        marked correctly or only uncovered boxes that are left are boxes with
-        mines."""
+        """Check if winning conditions were met. That means either all mines
+        were marked correctly or all uncovered boxes that are left are only
+        boxes with mines. Returns True if conditions were met."""
         win = False
         if self.mines_left == 0:
             correct_marked_boxes = []
@@ -188,7 +205,10 @@ class Minesweeper:
                         uncovered_boxes.append(box)
             if len(uncovered_boxes) == self.mines_left:
                 for box in uncovered_boxes:
-                    self.mark_mine(box=box)
+                    if not box.has_mine:
+                        return False
+                    else:
+                        self.mark_mine(box=box)
                 self.active = False
                 pygame.time.set_timer(self.timer_event, 0)
                 self.timer_active = False
@@ -196,6 +216,52 @@ class Minesweeper:
                 
         if win:
             self.window.gui.restart_button.draw_button('win_smile')
+            self.win_smile = True
+            return True
+        else:
+            return False
+    
+    def get_high_score(self, diff='all'):
+        """Get scores from database (either for currently chosen difficulty or
+        for all three difficulties). Diff argument takes 'all' or 
+        'beginner', or 'intermediate' or 'expert'.
+        Returns dictionary where keys are difficulty levels and values are times"""
+        cur = self.con.cursor()
+        if diff == 'all':
+            querry = "SELECT * FROM highscore"
+        else:
+            querry = f"SELECT difficulty, time FROM highscore WHERE difficulty='{diff}'"
+        highscore = cur.execute(querry).fetchall()
+        cur.close()
+        highscore_dict = dict()
+        for score in highscore:
+            highscore_dict.update({score[0]: score[1]})
+        return highscore_dict
+    
+    def update_highscore(self):
+        """Updates highscore in proper row in database (based on selected
+        difficulty) and in self.highscore dict."""
+        row = self.settings.difficulty
+        
+        if row in self.highscore:
+            querry = f"UPDATE highscore SET time={self.time_left} WHERE difficulty='{row}'"
+        else:
+            querry = f"INSERT INTO highscore VALUES ('{row}', {self.time_left})"
+        
+        # update database
+        cur = self.con.cursor()
+        cur.execute(querry)
+        self.con.commit()
+        # update self.highscore dict
+        self.highscore.update({row: self.time_left})
+        
+    def compare_time_to_highscore(self):
+        """Compares currently achieved time to high score. Returns True if 
+        current time is better than time in high score."""
+        if self.highscore[self.settings.difficulty] > self.time_left:
+            return True
+        else:
+            return False
     
     def add_time(self):
         """Count seconds that passed since the first click on body_rect."""
@@ -213,7 +279,7 @@ class Minesweeper:
                     
                 elif rect == rects[1] and self.sb_highlighted == False:
                     self.sb_highlighted = True
-                    self.window.gui.show_menu_buttons(scoreboard=True, clicked=True)
+                    self.window.gui.show_menu_buttons(highscores=True, clicked=True)
         
         if not rects[0].collidepoint(mouse_pos) and rects[1].collidepoint(mouse_pos):
             if self.diff_highlighted:
@@ -223,7 +289,7 @@ class Minesweeper:
         elif rects[0].collidepoint(mouse_pos) and not rects[1].collidepoint(mouse_pos):
             if self.sb_highlighted:
                 self.sb_highlighted = False
-                self.window.gui.show_menu_buttons(scoreboard=True)
+                self.window.gui.show_menu_buttons(highscores=True)
         
         elif not rects[0].collidepoint(mouse_pos) and not rects[1].collidepoint(mouse_pos):
             if self.dropdown_menu_shown and not self.custom_menu_shown:
@@ -242,12 +308,17 @@ class Minesweeper:
                 self.diff_highlighted = False
                 self.window.gui.show_menu_buttons(difficulty=True)
                 
+            elif self.sb_dropdown_menu_shown:
+                if not self.window.gui.sb_dropdown_rect.collidepoint(mouse_pos):
+                    self.sb_highlighted = False
+                    self.window.gui.show_menu_buttons(highscores=True)
+            
             elif self.sb_highlighted:
                 self.sb_highlighted = False
-                self.window.gui.show_menu_buttons(scoreboard=True)
+                self.window.gui.show_menu_buttons(highscores=True)
     
     def create_dropdown_window(self):
-        """Create dropdown window of difficulty menu. It needs to be called by 
+        """Create dropdown window of difficulty menu. It needs to be called by a
         method which will display it on screen."""
         dd_rect = self.window.gui.dropdown_rect
         
@@ -288,6 +359,33 @@ class Minesweeper:
             
             button_tuples.append((opt_rect, opt_text_string))
         return button_tuples
+        
+    def create_sb_dropdown_window(self):
+        """Create dropdown window of highscores menu. It needs to be called by a 
+        method which will display it on screen."""
+        sb_dd_rect = self.window.gui.sb_dropdown_rect
+        
+        # Create rects for individual diff settings scores.
+        sb_opt_rects = []
+        num_of_diffs = 3    # I won't track scores of custom diff
+        for num in range(num_of_diffs):
+            rect_width = sb_dd_rect.width
+            rect_height = sb_dd_rect.height / num_of_diffs
+            rect_left = sb_dd_rect.left
+            rect_top =(sb_dd_rect.top + 1) + (rect_height * num)
+            rect = pygame.Rect(rect_left, rect_top, rect_width, rect_height)
+            sb_opt_rects.append(rect)
+        
+        rect_text_tuples = []   # list of tuples of rects and its texts
+        for rect in sb_opt_rects:
+            if rect == sb_opt_rects[0]:
+                rect_text = 'Beginner:'
+            elif rect == sb_opt_rects[1]:
+                rect_text = 'Intermediate:'
+            elif rect == sb_opt_rects[2]:
+                rect_text = 'Expert:'
+            rect_text_tuples.append((rect, rect_text))
+        return rect_text_tuples
     
     def show_dropdown_window(self, button_tuples, just_button=False, highlight=False):
         """Displays dropdown window on screen. It takes as argument button tuples
@@ -324,6 +422,38 @@ class Minesweeper:
             self.screen.blit(dd_text, dd_text_rect)
             
         rect_lines(self, dd_rect, self.screen, thickness=1, inside=True, singlecolored='black')
+        
+    def show_sb_dropdown_menu(self, rect_text_tuples):
+        """Displays highscores menu on screen. It takes as argument tuples of 
+        rects and texts."""
+        sb_dd_rect = self.window.gui.sb_dropdown_rect
+        sb_dd_rect_color = self.window.gui.sb_dropdown_rect_color
+        
+        self.screen.fill(sb_dd_rect_color, sb_dd_rect)
+        self.sb_dropdown_menu_shown = True
+        
+        text_color = (0, 0, 0)
+        for elem in rect_text_tuples:
+            sb_font = pygame.font.SysFont('segoeuisymbol', 14)
+            sb_text = sb_font.render(elem[1], True, text_color, sb_dd_rect_color)
+            sb_text_rect = sb_text.get_rect(left=elem[0].left+10, top=elem[0].top)
+            self.screen.blit(sb_text, sb_text_rect)
+        
+        # show times next to difficulty levels
+        for score in self.highscore:
+            if score == 'beginner':
+                score_rect = rect_text_tuples[0][0]
+            elif score == 'intermediate':
+                score_rect = rect_text_tuples[1][0]
+            elif score == 'expert':
+                score_rect = rect_text_tuples[2][0]
+            score_text = sb_font.render(
+                str(self.highscore[score])+'s', True, text_color, sb_dd_rect_color)
+            score_text_rect = score_text.get_rect(right=score_rect.right-10,
+                top=score_rect.top)
+            self.screen.blit(score_text, score_text_rect)
+            
+        rect_lines(self, sb_dd_rect, self.screen, thickness=1, inside=True, singlecolored='black')
     
     def highlight_dropdown_buttons(self, mouse_pos):
         """Highlight buttons in dropdown window if hovering over them."""
@@ -374,6 +504,9 @@ class Minesweeper:
                 self.settings.columns = self.custom_settings['columns']
                 self.settings.rows = self.custom_settings['rows']
                 self.settings.mines = self.custom_settings['mines']
+            else:
+                self.custom_settings = {'columns': None, 'rows': None, 'mines': None}
+            
             pygame.time.set_timer(self.timer_event, 0)
             self.__init__(first_init=False)
             self.prep_new_game()
@@ -591,7 +724,13 @@ class Minesweeper:
         # Draw gui rects and lines.
         redraw_rects = list(self.gui_rects)
         redraw_rects.remove(self.gui_rects[0])
-        self.window.gui.draw_rects(redraw_rects)
+        # Redraw restart button with proper smile.
+        if self.win_smile:
+            self.window.gui.draw_rects(redraw_rects, smile='win_smile')
+        elif self.dead_smile:
+            self.window.gui.draw_rects(redraw_rects, smile='dead_smile')
+        else:
+            self.window.gui.draw_rects(redraw_rects)
         self.window.gui.draw_lines()
         # Write mines left.
         self.window.gui.show_mines_left(self.mines_left)
@@ -600,6 +739,7 @@ class Minesweeper:
         
         self.dropdown_menu_shown = False
         self.custom_menu_shown = False
+        self.sb_dropdown_menu_shown = False
         self.ok_highlighted = False
         self.active_rect = None
     
@@ -613,6 +753,8 @@ class Minesweeper:
         # Reset flags.
         self.active = True
         self.timer_active = False
+        self.win_smile = False
+        self.dead_smile = False
         
         # Draw gui rects and lines.
         self.window.gui.draw_rects(self.gui_rects)
@@ -669,6 +811,18 @@ class Minesweeper:
                                 self.mark_mine(mouse_pos)
                                 
                             self.check_winning()
+                            if self.check_winning():
+                            # game has been won
+                                
+                                if self.settings.difficulty in self.highscore.keys() and self.compare_time_to_highscore():
+                                # achieved time is better than time in
+                                # high score --> update highscore
+                                    self.update_highscore()
+                                
+                                elif not self.settings.difficulty in self.highscore.keys():
+                                # highscore in this diff setting hasn't been won
+                                # until now --> add new highscore
+                                    self.update_highscore()
                     
                     # restart button clicked
                     if (self.window.gui.restart_button.rect.collidepoint(mouse_pos)
@@ -676,12 +830,12 @@ class Minesweeper:
                         self.window.gui.restart_button.click()
                         pygame.time.set_timer(self.unclick_event, 250, loops=1)
                     
-                    # events for handeling menu bar and changing difficulty
+                    # events for handling menu bar and changing difficulty
                     diff_rect = self.window.gui.diff_rect
+                    scoreboard_rect = self.window.gui.scoreboard_rect
                     if button_clicked[0] and diff_rect.collidepoint(mouse_pos) and not self.dropdown_menu_shown:
-                        button_tuples = self.create_dropdown_window()
-                        self.show_dropdown_window(button_tuples)
-                    elif button_clicked[0] and self.dropdown_menu_shown and not self.custom_menu_shown:
+                        self.show_dropdown_window(self.create_dropdown_window())
+                    elif button_clicked[0] and self.dropdown_menu_shown and not diff_rect.collidepoint(mouse_pos) and not self.custom_menu_shown:
                         self.change_difficulty(mouse_pos)
                         
                     elif button_clicked[0] and self.custom_menu_shown:
@@ -697,11 +851,14 @@ class Minesweeper:
                                 dict_values = self.custom_settings.values()
                                 if None not in dict_values:
                                     self.change_difficulty(mouse_pos)
+                                    
+                    elif button_clicked[0] and scoreboard_rect.collidepoint(mouse_pos) and not self.sb_dropdown_menu_shown:
+                        self.show_sb_dropdown_menu(self.create_sb_dropdown_window())
                 
                 # timer
                 elif event.type == self.timer_event:
                     self.add_time()
-                # event handeling that simple animation when clicking on
+                # event handling that simple animation when clicking on
                 # restart button
                 elif event.type == self.unclick_event:
                     pygame.time.set_timer(self.timer_event, 0)
@@ -725,6 +882,9 @@ class Minesweeper:
                                 self.ok_button_highlighted = False
                         
                     elif self.dropdown_menu_shown and not self.diff_highlighted:
+                        self.hide_dropdown_window()
+                    
+                    elif self.sb_dropdown_menu_shown and not self.sb_highlighted:
                         self.hide_dropdown_window()
                 
                 # event for checking for writing in custom difficulty settings
