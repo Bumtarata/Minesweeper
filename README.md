@@ -38,11 +38,6 @@ the mine is marked correctly or not (by doing so the counter can even go to
 negative numbers). The right counter tracks passed time from first click into
 minefield. The button between these two counters works as a restart button.
 
-Currently is this game fully playable. It should work without any issues.
-There is only one thing left to be done and that it tracking scoreboard.
-Scoreboard button in menu bar currently does nothing but in a few days
-I intend to add functionality for that.
-
 I created this project as learning exercise which should help me to 
 strengthen my newly acquired basic knowledge and skills in programming with
 Python. The code might not be entirely clear and well organized, however
